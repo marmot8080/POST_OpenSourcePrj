@@ -47,7 +47,7 @@ public class ble {
     private static String byteArrayToHex(byte[] bytes){
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
-            sb.append(String.format("%02X", b)); // 각 바이트를 16진수 문자열로 변환하여 추가
+            sb.append(String.format("%02x", b)); // 각 바이트를 16진수 문자열로 변환하여 추가
         }
         return sb.toString();
     }
