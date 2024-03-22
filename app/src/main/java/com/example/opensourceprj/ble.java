@@ -34,7 +34,7 @@ public class ble {
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             String MacAdd = device.getAddress();
 
-            if(MacAdd == raspberryPiAddr) {
+            if(MacAdd.equals(raspberryPiAddr)) {
                 String data = byteArrayToHex(scanRecord);
 
                 OTP_data = extractOTP(data);
