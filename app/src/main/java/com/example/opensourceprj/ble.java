@@ -1,20 +1,12 @@
 package com.example.opensourceprj;
 
-import static android.widget.Toast.makeText;
-
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.pm.PackageManager;
-import android.widget.Toast;
-
-import androidx.core.app.ActivityCompat;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ble {
-    private static MainActivity mainActivity = new MainActivity();
-
     // 객체 생성
     private static BluetoothAdapter blead = BluetoothAdapter.getDefaultAdapter();
 
@@ -38,8 +30,6 @@ public class ble {
                 String data = byteArrayToHex(scanRecord);
 
                 OTP_data = extractOTP(data);
-            } else {
-                Toast.makeText(mainActivity.getApplicationContext(), "주소가 일치하지 않습니다.", Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -54,19 +44,16 @@ public class ble {
 
     private static String extractOTP(String hexData) {
         String OTP = null;
-        String regExp = "99 88 99 ([\\w]{2} [\\w]{2} [\\w]{2} [\\w]{2} [\\w]{2})+ 99 88 99";
+        String regExp = "99 88 99 ([0-9a-fA-F ]+) 99 88 99"; // OTP 추출 정규표현식
 
         Pattern pattern = Pattern.compile(regExp);
         Matcher matcher = pattern.matcher(hexData);
 
         if (matcher.find()) {
-            OTP = matcher.group(1); // 그룹 1을 추출하여 반환
+            OTP = matcher.group(1); // 매칭된 문자열을 추출하여 반환
 
             OTP = OTP.replaceAll("\\s", ""); // 공백 제거
-        } else {
-            Toast.makeText(mainActivity.getApplicationContext(), "OTP를 읽어오지 못했습니다.", Toast.LENGTH_SHORT).show();
         }
-
         return OTP;
     }
 
