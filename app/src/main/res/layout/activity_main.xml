@@ -20,12 +20,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.395" />
 
-    <Button
-        android:id="@+id/Btn_test"
+    <ToggleButton
+        android:id="@+id/Toggle_btn_scan"
         android:layout_width="120dp"
-        android:layout_height="60dp"
-        android:text="TEST"
+        android:layout_height="70dp"
+        android:checked="false"
+        android:textOn="STOP\nSCAN"
+        android:textOff="START\nSCAN"
         android:textSize="24dp"
+        android:textStyle="bold"
+        android:background="#83507AF6"
+        android:onClick="onToggleClicked"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
