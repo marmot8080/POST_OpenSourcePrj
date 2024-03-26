@@ -24,12 +24,21 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/Btn_close"
+            android:id="@+id/Dlg_btn_cancel"
             android:layout_width="0dp"
             android:layout_height="40dp"
             android:layout_marginEnd="7dp"
             android:layout_weight="1"
-            android:text="close"
+            android:text="cancel"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/Dlg_btn_accept"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="7dp"
+            android:layout_weight="1"
+            android:text="accept"
             android:textSize="14sp" />
     </LinearLayout>
 
