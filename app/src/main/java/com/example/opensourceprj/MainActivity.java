@@ -32,13 +32,13 @@ public class MainActivity extends AppCompatActivity {
     private Retrofit retrofit;
     private comm_data service;
     private BluetoothAdapter blead;
+    private CustomDialog customDialog;
 
     private Button btn_test;
 
-    private static final String raspberryPiAddr = "B8:27:EB:7F:E7:58";
     private String OTP_data = null;
-    private static final String user = "2jo, minwoo, taeho, hyungwoo, bogu, wuyixin";
-    private static String data = null;
+    private static final String user = "2jo, minwoo, taeho, hyungwoo, bogu, wuyixin"; // 팀명
+    private static final String raspberryPiAddr = "B8:27:EB:7F:E7:58"; // 라즈베리파이 Mac address
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,10 +53,15 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Toast.makeText(getApplicationContext(), "Bluetooth is available", Toast.LENGTH_SHORT).show();
         }
-        
-        // 블루투스 기능 비활성화 시 블루투스 활성화
+
+        // 블루투스 기능 비활성화 시 팝업 메시지 생성
         if (!blead.isEnabled()) {
-            blead.enable();
+            customDialog = new CustomDialog(MainActivity.this,
+                    "블루투스 기능이 꺼져있습니다.\n블루투스 기능을 활성화 해주십시오.",
+                    "취소",
+                    "확인");
+
+            customDialog.show();
         }
 
         // bluetooth 스캔 시작
@@ -88,7 +93,14 @@ public class MainActivity extends AppCompatActivity {
         btn_test.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(OTP_data != null) {
+                if (!blead.isEnabled()) {
+                    customDialog = new CustomDialog(MainActivity.this,
+                            "블루투스 기능이 꺼져있습니다.\n블루투스 기능을 활성화 해주십시오.",
+                            "취소",
+                            "확인");
+
+                    customDialog.show();
+                } else if(OTP_data != null) {
                     Call<String> call = service.post(user, OTP_data);
 
                     call.enqueue(new Callback<String>() {
