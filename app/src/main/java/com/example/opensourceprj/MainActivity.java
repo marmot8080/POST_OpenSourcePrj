@@ -6,13 +6,12 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -45,6 +44,29 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+        ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            customDialog = new CustomDialog(MainActivity.this,
+                    "앱 권한이 설정되어있지 않습니다.\n설정 페이지로 이동하시겠습니까?",
+                    "취소",
+                    "확인");
+
+            customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                @Override
+                public void cancelClicked() {
+
+                }
+
+                @Override
+                public void acceptClicked() {
+                    Intent settingIntent = new Intent(Settings.ACTION_SETTINGS);
+                    startActivity(settingIntent);
+                }
+            });
+
+            customDialog.show();
+        }
 
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
@@ -79,6 +101,11 @@ public class MainActivity extends AppCompatActivity {
         boolean on = ((ToggleButton) v).isChecked();
 
         if(on) {
+            if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                Toast.makeText(this, "No permission", Toast.LENGTH_SHORT).show();
+            }
+
             if(blead.isEnabled()) {
                 // bluetooth 스캔 시작
                 blead.startLeScan(scancallback_le);
