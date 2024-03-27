@@ -2,17 +2,21 @@ package com.example.opensourceprj;
 
 import android.os.Environment;
 import android.view.View;
+import android.widget.Button;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.Buffer;
 
-public class Data_Transmission_Activity {
+public class DataTransmissionActivity {
+    Button btn_store;
+    Button btn_write;
+    Button btn_show;
 
-    bt_store.setOnClickListener(new View.OnClickListener(){
+    btn_store.setOnClickListener(new View.OnClickListener(){
 
         public void onClick(View view) {
 
@@ -52,7 +56,7 @@ public class Data_Transmission_Activity {
 
 
 
-    bt_write.setOnClickListener(new View.OnClickListener(){
+    btn_write.setOnClickListener(new View.OnClickListener(){
         public void onClick(View view){
             int rssi = Integer.valueOf(ed_rssi.getText().toString());
             int pm1_0 = Integer.valueOf(ed_pm1_0.getText().toString());
@@ -65,7 +69,7 @@ public class Data_Transmission_Activity {
         }
     });
 
-    bt_show.setOnClickListener(new View.OnClickListener(){
+    btn_show.setOnClickListener(new View.OnClickListener(){
 
         public void onClick(View view) {
 
