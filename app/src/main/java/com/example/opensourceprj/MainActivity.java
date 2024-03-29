@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private CustomDialog customDialog;
 
     private ToggleButton toggle_btn_scan;
+    private Button btn_storage_test;
 
     private String OTP_data = null;
     private static final String user = "2jo, minwoo, taeho, hyungwoo, bogu, wuyixin"; // 팀명
@@ -95,6 +97,16 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         service = retrofit.create(comm_data.class);
+
+
+        btn_storage_test = findViewById(R.id.Btn_storage_test);
+        btn_storage_test.setOnClickListener(new View.OnClickListener () {
+            @Override
+            public  void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), DataTransmissionActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     public void onToggleClicked(View v){
