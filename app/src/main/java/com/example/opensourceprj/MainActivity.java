@@ -1,7 +1,9 @@
 package com.example.opensourceprj;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -19,6 +21,8 @@ import android.widget.ToggleButton;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,34 +45,14 @@ public class MainActivity extends AppCompatActivity {
     private String OTP_data = null;
     private static final String user = "2jo, minwoo, taeho, hyungwoo, bogu, wuyixin"; // 팀명
     private static final String raspberryPiAddr = "B8:27:EB:7F:E7:58"; // 라즈베리파이 Mac address
+    private static final int PERMISSION_REQUEST_CODE = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            customDialog = new CustomDialog(MainActivity.this,
-                    "앱 권한이 설정되어있지 않습니다.\n설정 페이지로 이동하시겠습니까?",
-                    "취소",
-                    "확인");
-
-            customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-                @Override
-                public void cancelClicked() {
-
-                }
-
-                @Override
-                public void acceptClicked() {
-                    Intent settingIntent = new Intent(Settings.ACTION_SETTINGS);
-                    startActivity(settingIntent);
-                }
-            });
-
-            customDialog.show();
-        }
+        checkAndRequestPermissions(); // 권한 확인
 
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
@@ -200,5 +184,28 @@ public class MainActivity extends AppCompatActivity {
         OTP = OTP.replaceAll("\\s", ""); // 공백 제거
 
         return OTP;
+    }
+
+    private void checkAndRequestPermissions() {
+        String[] permissions = {
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.MANAGE_EXTERNAL_STORAGE
+        };
+
+        List<String> permissionsNeeded = new ArrayList<>();
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionsNeeded.add(permission);
+            }
+        }
+
+        if (!permissionsNeeded.isEmpty()) {
+            // 사용자에게 권한 요청 다이얼로그 표시
+            ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+        }
     }
 }
