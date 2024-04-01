@@ -181,14 +181,14 @@ public class MainActivity extends AppCompatActivity {
     private String byteArrayToHex(byte[] bytes){
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
-            sb.append(String.format("%02x", b)); // 각 바이트를 16진수 문자열로 변환하여 추가
+            sb.append(String.format("%02x ", b)); // 각 바이트를 16진수 문자열로 변환하여 추가
         }
         return sb.toString();
     }
 
     private String extractOTP(String hexData) {
         String OTP = null;
-        String regExp = "998899([0-9a-fA-F]+)998899"; // OTP 추출 정규표현식
+        String regExp = "99 88 99 ([0-9a-fA-F ]+) 99 88 99"; // OTP 추출 정규표현식
 
         Pattern pattern = Pattern.compile(regExp);
         Matcher matcher = pattern.matcher(hexData);
@@ -196,6 +196,9 @@ public class MainActivity extends AppCompatActivity {
         if (matcher.find()) {
             OTP = matcher.group(1); // 매칭된 문자열을 추출하여 반환
         }
+
+        OTP = OTP.replaceAll("\\s", ""); // 공백 제거
+
         return OTP;
     }
 }
