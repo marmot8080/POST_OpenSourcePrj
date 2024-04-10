@@ -1,6 +1,5 @@
 package com.example.opensourceprj;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -11,7 +10,6 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -121,8 +119,6 @@ public class MainActivity extends AppCompatActivity {
 
             if(MacAdd.equals(raspberryPiAddr)) {
                 toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
-
-                blead.stopLeScan(scancallback_le);
                 toggle_btn_scan.setChecked(false);
 
                 String data = byteArrayToHex(scanRecord);
