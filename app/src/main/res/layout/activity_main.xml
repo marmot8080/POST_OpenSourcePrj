@@ -7,51 +7,50 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:layout_width="320dp"
-        android:layout_height="160dp"
+        android:id="@+id/Txt_tv"
+        android:layout_width="350dp"
+        android:layout_height="600dp"
         android:gravity="center"
-        android:text="팀명\nPOST"
+        android:hint="show data"
         android:textSize="32dp"
-        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.395" />
+        app:layout_constraintVertical_bias="0.107" />
 
     <ToggleButton
         android:id="@+id/Toggle_btn_scan"
         android:layout_width="120dp"
         android:layout_height="70dp"
-        android:checked="false"
-        android:textOn="STOP\nSCAN"
-        android:textOff="START\nSCAN"
-        android:textSize="24dp"
-        android:textStyle="bold"
         android:background="#83507AF6"
+        android:checked="false"
         android:onClick="onToggleClicked"
+        android:textOff="START\nSCAN"
+        android:textOn="STOP\nSCAN"
+        android:textSize="22dp"
+        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.575" />
+        app:layout_constraintVertical_bias="0.95" />
 
     <Button
-        android:id="@+id/Btn_storage_test"
+        android:id="@+id/Btn_send_data"
         android:layout_width="120dp"
-        android:layout_height="60dp"
+        android:layout_height="70dp"
         android:background="#83507AF6"
         android:checked="false"
-        android:text="TEST"
-        android:textSize="24dp"
+        android:text="SEND\nDATA"
+        android:textSize="22dp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.8"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.724" />
+        app:layout_constraintVertical_bias="0.95" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
