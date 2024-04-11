@@ -3,35 +3,29 @@ package com.example.opensourceprj;
 import android.view.View;
 
 public class BLEdata_storage {
-    private int RSSI;
-    private int p01;
-    private int p25;
-    private int p10;
+    private String sensorTeam;
+    private String macAddr;
     private long time;
+    private int otp;
+    private String pmData;
 
-    BLEdata_storage(int RSSI, int p01, int p25, int p10, long time){
-        this.RSSI = RSSI;
-        this.p01 = p01;
-        this.p25 = p25;
-        this.p10 = p10;
+    BLEdata_storage(String sensorTeam, String macAddr, long time, int otp, String pmData){
+        this.sensorTeam = sensorTeam;
+        this.macAddr = macAddr;
         this.time = time;
+        this.otp = otp;
+        this.pmData = pmData;
     }
 
-    public int get_rssi(){
-        return RSSI;
+    public String get_sensor_team() {return sensorTeam;}
+
+    public String get_mac_addr() {return macAddr;}
+
+    public int get_otp(){
+        return otp;
     }
 
-    public int get_p01() {
-        return p01;
-    }
-
-    public int get_p25(){
-        return p25;
-    }
-
-    public int get_p10(){
-        return p10;
-    }
+    public String get_pm_data() {return pmData;}
 
     public long get_time(){
         return time;

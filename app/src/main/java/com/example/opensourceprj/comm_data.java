@@ -12,7 +12,11 @@ public interface comm_data {
     @FormUrlEncoded
     @POST("dustsensor/commtest/")
     Call<String> post(
-            @Field("user") String user,
+            @Field("sensor") String user,
+            @Field("mac") String mac,
+            @Field("receiver") String receiver,
+            @Field("time") long time,
+            @Field("otp") int otp,
             @Field("data") String data);
 
     @POST("dustsensor/commtest_json/")
@@ -22,6 +26,10 @@ public interface comm_data {
 
     @GET("dustsensor/commtest_get/")
     Call<String> get(
-            @Query("user") String user,
+            @Query("sensor") String user,
+            @Query("mac") String mac,
+            @Query("receiver") String receiver,
+            @Query("time") long time,
+            @Query("otp") int otp,
             @Query("data") String data);
 }
