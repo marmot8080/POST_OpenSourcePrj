@@ -49,8 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private CustomDialog customDialog;
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
-    private ToggleButton toggle_btn_scan;
-    private Button btn_send_data;
+    private ToggleButton toggle_btn_scan, toggle_btn_delete;
+    private Button btn_send_data, btn_delete_all, btn_delete_latest_value;
     private TextView tv_data;
 
     private static final String receiver = "2jo"; // 팀명
@@ -237,9 +237,124 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        btn_delete_all = findViewById(R.id.Btn_delete_all);
+        btn_delete_all.setVisibility(View.GONE);
+        btn_delete_all.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customDialog = new CustomDialog(MainActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
+                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                    @Override
+                    public void cancelClicked() {
+
+                    }
+
+                    @Override
+                    public void acceptClicked() {
+                        try {
+                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                            if (!file.exists()) {
+                                file.createNewFile();
+                            }
+
+                            FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                            BufferedWriter bw = new BufferedWriter(fw);
+
+                            bw.write("");
+
+                            tv_data = findViewById(R.id.Txt_tv);
+                            tv_data.setText("");
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+
+                customDialog.show();
+            }
+        });
+
+        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+        btn_delete_latest_value.setVisibility(View.GONE);
+        btn_delete_latest_value.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                customDialog = new CustomDialog(MainActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
+                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                    @Override
+                    public void cancelClicked() {
+
+                    }
+
+                    @Override
+                    public void acceptClicked() {
+                        try {
+                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                            if (!file.exists()) {
+                                file.createNewFile();
+                            }
+
+                            FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+                            FileReader fr = new FileReader(file.getAbsoluteFile());
+                            BufferedWriter bw = new BufferedWriter(fw);
+                            BufferedReader br = new BufferedReader(fr);
+
+                            datalist = new ArrayList<>();
+                            String[] data = null;
+                            String sensorTeam = null;
+                            String macAddr = null;
+                            long sensingTime = 0;
+                            int OTP = 0;
+                            String pmData = null;
+
+                            String line;
+                            while ((line = br.readLine()) != null) {
+                                data = line.split(",", 5);
+                                sensorTeam = data[0];
+                                macAddr = data[1];
+                                sensingTime = Integer.valueOf(data[2]);
+                                OTP = Integer.valueOf(data[3]);
+                                pmData = data[4];
+
+                                datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
+                            }
+
+                            for(int i = 0; i < datalist.size() - 2; i++) {
+                                bw.write(String.valueOf(datalist.get(datalist.size()-1).get_sensor_team()));
+                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_mac_addr()));
+                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_otp()));
+                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_pm_data()));
+                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_time()));
+
+                                bw.newLine();
+                            }
+
+                            tv_data = findViewById(R.id.Txt_tv);
+                            tv_data.setText("");
+                            br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
+                            while((line = br.readLine())!=null) {
+                                tv_data.setText(tv_data.getText()+line+"\n");
+                            }
+
+                            fw.close();
+                            fr.close();
+                            bw.close();
+                            br.close();
+                        } catch (FileNotFoundException e) {
+                            throw new RuntimeException(e);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+
+                customDialog.show();
+            }
+        });
     }
 
-    public void onToggleClicked(View v){
+    public void onToggleScan(View v){
         boolean on = ((ToggleButton) v).isChecked();
 
         if(on) {
@@ -257,6 +372,20 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             blead.stopLeScan(scancallback_le);
+        }
+    }
+
+    public void onToggleDelete(View v){
+        boolean on = ((ToggleButton) v).isChecked();
+        btn_delete_all = findViewById(R.id.Btn_delete_all);
+        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+
+        if(on) {
+            btn_delete_all.setVisibility(View.VISIBLE);
+            btn_delete_latest_value.setVisibility(View.VISIBLE);
+        } else {
+            btn_delete_all.setVisibility(View.GONE);
+            btn_delete_latest_value.setVisibility(View.GONE);
         }
     }
 
