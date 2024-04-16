@@ -82,11 +82,16 @@ public class MainActivity extends AppCompatActivity {
             "B8:27:EB:E4:D0:FC",
             "B8:27:EB:57:71:7D"
     }; // 5조 라즈베리파이 Mac address
+
+    private static final String[] raspberryPiAddr_ta = {
+            "B8:27:EB:7F:E7:58"
+    }; // ta 라즈베리파이 Mac address
     private static final List<String> raspberryPiAddrList_1 = new ArrayList<>(Arrays.asList(raspberryPiAddr_1));
     private static final List<String> raspberryPiAddrList_2 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2));
     private static final List<String> raspberryPiAddrList_3 = new ArrayList<>(Arrays.asList(raspberryPiAddr_3));
     private static final List<String> raspberryPiAddrList_4 = new ArrayList<>(Arrays.asList(raspberryPiAddr_4));
     private static final List<String> raspberryPiAddrList_5 = new ArrayList<>(Arrays.asList(raspberryPiAddr_5));
+    private static final List<String> raspberryPiAddrList_ta = new ArrayList<>(Arrays.asList(raspberryPiAddr_ta));
     private static final int PERMISSION_REQUEST_CODE = 1000;
 
     @Override
@@ -561,6 +566,7 @@ public class MainActivity extends AppCompatActivity {
         else if(raspberryPiAddrList_3.contains(raspPiAddr)) sensorTeam = "3jo";
         else if(raspberryPiAddrList_4.contains(raspPiAddr)) sensorTeam = "4jo";
         else if(raspberryPiAddrList_5.contains(raspPiAddr)) sensorTeam = "5jo";
+        else if(raspberryPiAddrList_ta.contains(raspPiAddr)) sensorTeam = "ta";
 
         return sensorTeam;
     }
