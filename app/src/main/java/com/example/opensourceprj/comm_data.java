@@ -10,7 +10,7 @@ import retrofit2.http.Query;
 
 public interface comm_data {
     @FormUrlEncoded
-    @POST("dustsensor/commtest/")
+    @POST("dustsensor/sensing/")
     Call<String> post(
             @Field("sensor") String user,
             @Field("mac") String mac,

@@ -7,7 +7,6 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,7 +27,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private CustomDialog customDialog;
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
-    private ToggleButton toggle_btn_scan, toggle_btn_delete;
+    private ToggleButton toggle_btn_scan;
     private Button btn_send_data, btn_delete_all, btn_delete_latest_value;
     private TextView tv_data;
 
@@ -117,6 +115,30 @@ public class MainActivity extends AppCompatActivity {
             customDialog.show();
         }
 
+        try {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+            if(!file.exists()) {
+                file.createNewFile();
+            }
+            FileReader fr = new FileReader(file.getAbsoluteFile());
+            BufferedReader br = new BufferedReader(fr);
+
+            tv_data = findViewById(R.id.Txt_tv);
+            tv_data.setText("");
+
+            String line;
+            while((line = br.readLine())!=null) {
+                tv_data.setText(tv_data.getText()+line+"\n");
+            }
+
+            fr.close();
+            br.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         Gson gson = new GsonBuilder().setLenient().create();
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://203.255.81.72:10021/")
@@ -155,11 +177,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void acceptClicked() {
                                 try {
-                                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-
-                                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
                                     FileReader fr = new FileReader(file.getAbsoluteFile());
-                                    BufferedWriter bw = new BufferedWriter(fw);
                                     BufferedReader br = new BufferedReader(fr);
 
                                     datalist = new ArrayList<>();
@@ -169,32 +187,34 @@ public class MainActivity extends AppCompatActivity {
                                         String[] data = line.split(",", 5);
                                         String sensorTeam = data[0];
                                         String macAddr = data[1];
-                                        long sensingTime = Integer.valueOf(data[2]);
-                                        int OTP = Integer.valueOf(data[3]);
-                                        String pmData = data[4];
+                                        int OTP = Integer.valueOf(data[2]);
+                                        String pmData = data[3];
+                                        long sensingTime = Integer.valueOf(data[4]);
 
                                         Call<String> call = service.post(sensorTeam, macAddr, receiver, sensingTime, OTP, pmData);
 
                                         call.enqueue(new Callback<String>() {
                                             @Override
                                             public void onResponse(Call<String> call, Response<String> response) {
-                                                Log.e("ServerCommunicationSuccess", response.body().toString());
+                                                Log.d("ServerCommunicationSuccess", response.body().toString());
                                             }
 
                                             @Override
                                             public void onFailure(Call<String> call, Throwable t) {
                                                 // 서버 전송에 실패한 데이터들은 datalist에 저장
                                                 datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
-                                                Log.e("ServerCommunicationFail", "failed to communicate with server", t);
+                                                Log.d("ServerCommunicationFail", "failed to communicate with server", t);
                                             }
                                         });
-
-                                        Thread.sleep(1000);
                                     }
 
+                                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                                    BufferedWriter bw = new BufferedWriter(fw);
+
+                                    bw.write("");
                                     // 서버 전송에 실패한 datalist를 csv파일에 다시 저장
                                     if(!datalist.isEmpty()) {
-                                        for(int i = 0; i < datalist.size(); i++) {
+                                        for (int i = 0; i < datalist.size(); i++) {
                                             bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
                                             bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
                                             bw.write("," + String.valueOf(datalist.get(i).get_otp()));
@@ -203,8 +223,6 @@ public class MainActivity extends AppCompatActivity {
 
                                             bw.newLine();
                                         }
-                                    } else {
-                                        bw.write("");
                                     }
 
                                     tv_data = findViewById(R.id.Txt_tv);
@@ -222,8 +240,6 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (FileNotFoundException e) {
                                     throw new RuntimeException(e);
                                 } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                } catch (InterruptedException e) {
                                     throw new RuntimeException(e);
                                 }
                             }
@@ -295,9 +311,7 @@ public class MainActivity extends AppCompatActivity {
                                 file.createNewFile();
                             }
 
-                            FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
                             FileReader fr = new FileReader(file.getAbsoluteFile());
-                            BufferedWriter bw = new BufferedWriter(fw);
                             BufferedReader br = new BufferedReader(fr);
 
                             datalist = new ArrayList<>();
@@ -313,34 +327,38 @@ public class MainActivity extends AppCompatActivity {
                                 data = line.split(",", 5);
                                 sensorTeam = data[0];
                                 macAddr = data[1];
-                                sensingTime = Integer.valueOf(data[2]);
-                                OTP = Integer.valueOf(data[3]);
-                                pmData = data[4];
+                                OTP = Integer.valueOf(data[2]);
+                                pmData = data[3];
+                                sensingTime = Integer.valueOf(data[4]);
 
                                 datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
                             }
+                            br.close();
+                            fr.close();
 
-                            for(int i = 0; i < datalist.size() - 2; i++) {
-                                bw.write(String.valueOf(datalist.get(datalist.size()-1).get_sensor_team()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_mac_addr()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_otp()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_pm_data()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_time()));
+                            FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                            BufferedWriter bw = new BufferedWriter(fw);
+                            if(!datalist.isEmpty()) {
+                                for (int i = 0; i < datalist.size() - 2; i++) {
+                                    bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
+                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_mac_addr()));
+                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_otp()));
+                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_pm_data()));
+                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_time()));
 
-                                bw.newLine();
+                                    bw.newLine();
+                                }
                             }
+                            bw.close();
+                            fw.close();
 
                             tv_data = findViewById(R.id.Txt_tv);
                             tv_data.setText("");
-                            br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
+                            fr = new FileReader(file.getAbsoluteFile());
+                            br = new BufferedReader(fr);
                             while((line = br.readLine())!=null) {
                                 tv_data.setText(tv_data.getText()+line+"\n");
                             }
-
-                            fw.close();
-                            fr.close();
-                            bw.close();
-                            br.close();
                         } catch (FileNotFoundException e) {
                             throw new RuntimeException(e);
                         } catch (IOException e) {
@@ -396,6 +414,10 @@ public class MainActivity extends AppCompatActivity {
             String sensorTeam = checkRaspPiAddr(MacAddr);
 
             if(sensorTeam != null) {
+                toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
+                toggle_btn_scan.setChecked(false);
+                blead.stopLeScan(scancallback_le);
+
                 String hexData = byteArrayToHex(scanRecord);
                 int sensingTime = Integer.valueOf(extractSensingTime(hexData));
 
