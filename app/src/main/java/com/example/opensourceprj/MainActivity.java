@@ -320,21 +320,15 @@ public class MainActivity extends AppCompatActivity {
                             BufferedReader br = new BufferedReader(fr);
 
                             datalist = new ArrayList<>();
-                            String[] data = null;
-                            String sensorTeam = null;
-                            String macAddr = null;
-                            long sensingTime = 0;
-                            int OTP = 0;
-                            String pmData = null;
 
                             String line;
                             while ((line = br.readLine()) != null) {
-                                data = line.split(",", 5);
-                                sensorTeam = data[0];
-                                macAddr = data[1];
-                                OTP = Integer.valueOf(data[2]);
-                                pmData = data[3];
-                                sensingTime = Integer.valueOf(data[4]);
+                                String[] data = line.split(",", 5);
+                                String sensorTeam = data[0];
+                                String macAddr = data[1];
+                                int OTP = Integer.valueOf(data[2]);
+                                String pmData = data[3];
+                                long sensingTime = Integer.valueOf(data[4]);
 
                                 datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
                             }
@@ -344,12 +338,12 @@ public class MainActivity extends AppCompatActivity {
                             FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
                             BufferedWriter bw = new BufferedWriter(fw);
                             if(!datalist.isEmpty()) {
-                                for (int i = 0; i < datalist.size() - 2; i++) {
-                                    bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
-                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_mac_addr()));
-                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_otp()));
-                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_pm_data()));
-                                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_time()));
+                                for (int i = 0; i < datalist.size() - 1; i++) {
+                                    bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
+                                    bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
+                                    bw.write("," + String.valueOf(datalist.get(i).get_otp()));
+                                    bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
+                                    bw.write("," + String.valueOf(datalist.get(i).get_time()));
 
                                     bw.newLine();
                                 }
@@ -364,6 +358,9 @@ public class MainActivity extends AppCompatActivity {
                             while((line = br.readLine())!=null) {
                                 tv_data.setText(tv_data.getText()+line+"\n");
                             }
+
+                            br.close();
+                            fr.close();
                         } catch (FileNotFoundException e) {
                             throw new RuntimeException(e);
                         } catch (IOException e) {
