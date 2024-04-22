@@ -51,6 +51,9 @@ public class MainActivity extends AppCompatActivity {
     private Button btn_send_data, btn_delete_all, btn_delete_latest_value;
     private TextView tv_data;
 
+    // crewling sensing page url
+    private String sensing_Page_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"
+
     private static final String receiver = "2jo"; // 팀명
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",

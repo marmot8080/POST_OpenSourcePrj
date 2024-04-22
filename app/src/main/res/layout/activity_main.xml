@@ -8,16 +8,17 @@
 
     <TextView
         android:id="@+id/Txt_tv"
-        android:layout_width="350dp"
-        android:layout_height="600dp"
+        android:layout_width="360dp"
+        android:layout_height="480dp"
         android:gravity="center"
         android:hint="show data"
         android:textSize="32dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.107" />
+        app:layout_constraintVertical_bias="0.25" />
 
     <ToggleButton
         android:id="@+id/Toggle_btn_scan"
@@ -86,7 +87,7 @@
         app:layout_constraintHorizontal_bias="0.3"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.8" />
+        app:layout_constraintVertical_bias="0.820" />
 
     <Button
         android:id="@+id/Btn_delete_latest_value"
@@ -103,6 +104,25 @@
         app:layout_constraintHorizontal_bias="0.7"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.8" />
+        app:layout_constraintVertical_bias="0.820" />
+
+    <Button
+        android:id="@+id/Btn_sensingPage_view"
+        android:layout_width="90dp"
+        android:layout_height="60dp"
+        android:bankground="#EE5B6F"
+        android:checked="false"
+        android:text="page view"
+        android:textSize="18dp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        tools:layout_editor_absoluteX="290dp"
+        tools:layout_editor_absoluteY="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.9"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.02" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
