@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
 
                     FileReader fr = new FileReader(file.getAbsoluteFile());
                     BufferedReader br = new BufferedReader(fr);
-                    
+
                     // 파일이 비어있으면 토스트 메시지 출력
                     if(br.readLine() == "") Toast.makeText(MainActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
                     else{
@@ -424,7 +424,50 @@ public class MainActivity extends AppCompatActivity {
                 int sensingTime = Integer.valueOf(extractSensingTime(hexData));
 
                 if(datalist.isEmpty() || datalist.get(datalist.size() - 1).get_time() != sensingTime){
-                    customDialog = new CustomDialog(MainActivity.this,
+
+                    // 저장 여부 팝업 메시지 없이 계속 저장 실행
+                    String OTP = extractOTP(hexData);
+                    String pmData = extractSensorData(hexData);
+
+                    BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, Integer.valueOf(OTP), pmData);
+                    datalist.add(data);
+
+                    try {
+                        File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                        if(!file.exists()) {
+                            file.createNewFile();
+                        }
+
+                        FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+                        BufferedWriter bw = new BufferedWriter(fw);
+
+                        bw.write(String.valueOf(datalist.get(datalist.size()-1).get_sensor_team()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_mac_addr()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_otp()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_pm_data()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_time()));
+
+                        bw.newLine();
+
+                        bw.close();
+                        fw.close();
+                    }catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+
+                    try{
+                        tv_data = findViewById(R.id.Txt_tv);
+                        tv_data.setText("");
+                        String line;
+                        BufferedReader br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
+                        while((line = br.readLine())!=null) {
+                            tv_data.setText(tv_data.getText()+line+"\n");
+                        }
+                    }catch (IOException e){
+                        throw new RuntimeException(e);
+                    }
+
+                    /*customDialog = new CustomDialog(MainActivity.this,
                             "센서 데이터를 읽어왔습니다.\n저장하시겠습니까?",
                             "취소",
                             "저장");
@@ -479,6 +522,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     });
+                    */
 
                     customDialog.show();
                 }
