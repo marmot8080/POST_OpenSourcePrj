@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private Button btn_send_data, btn_delete_all, btn_delete_latest_value;
+    private Button btn_send_data, btn_delete_all, btn_delete_latest_value, Btn_sensingPage_view;
     private TextView tv_data;
     private Switch switch_directly_send;
 
