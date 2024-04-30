@@ -15,7 +15,6 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -55,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     private Button btn_send_data, btn_delete_all, btn_delete_latest_value, btn_view_sensing_data;
     private TextView tv_data;
     private Switch switch_directly_send;
-    private ScrollView scroll_view_data;
 
     private static final String receiver = "2jo"; // 팀명
     private static final String[] raspberryPiAddr_1 = {
@@ -73,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] raspberryPiAddr_3 = {
             "D8:3A:DD:79:8E:D9",
             "D8:3A:DD:42:AC:9A",
-            "D8:3A:DD:42:A8:FB",
+            "D8:3A:DD:42:AB:FB",
             "D8:3A:DD:79:8E:9B"
     }; // 3조 라즈베리파이 Mac address
     private static final String[] raspberryPiAddr_4 = {
@@ -136,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
 
             tv_data = findViewById(R.id.Text_view_data);
             tv_data.setText("");
+            tv_data.setMovementMethod(new ScrollingMovementMethod());
 
             String line;
             while ((line = br.readLine()) != null) {
@@ -254,7 +253,6 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                         }
 
-                                        scroll_view_data = findViewById(R.id.Scroll_view_data);
                                         tv_data = findViewById(R.id.Text_view_data);
                                         tv_data.setText("");
                                         br.close();
@@ -262,7 +260,6 @@ public class MainActivity extends AppCompatActivity {
                                         while ((line = br.readLine()) != null) {
                                             tv_data.setText(tv_data.getText() + line + "\n");
                                         }
-                                        scroll_view_data.fullScroll(View.FOCUS_DOWN);
 
                                         bw.close();
                                         br.close();
@@ -382,7 +379,6 @@ public class MainActivity extends AppCompatActivity {
                             bw.close();
                             fw.close();
 
-                            scroll_view_data = findViewById(R.id.Scroll_view_data);
                             tv_data = findViewById(R.id.Text_view_data);
                             tv_data.setText("");
                             fr = new FileReader(file.getAbsoluteFile());
@@ -390,7 +386,6 @@ public class MainActivity extends AppCompatActivity {
                             while ((line = br.readLine()) != null) {
                                 tv_data.setText(tv_data.getText() + line + "\n");
                             }
-                            scroll_view_data.fullScroll(View.FOCUS_DOWN);
 
                             br.close();
                             fr.close();
@@ -522,7 +517,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     try {
-                        scroll_view_data = findViewById(R.id.Scroll_view_data);
                         tv_data = findViewById(R.id.Text_view_data);
                         tv_data.setText("");
                         String line;
@@ -530,7 +524,6 @@ public class MainActivity extends AppCompatActivity {
                         while ((line = br.readLine()) != null) {
                             tv_data.setText(tv_data.getText() + line + "\n");
                         }
-                        scroll_view_data.fullScroll(View.FOCUS_DOWN);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
