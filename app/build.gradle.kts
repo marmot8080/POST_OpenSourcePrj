@@ -1,5 +1,6 @@
 plugins {
     id("com.android.application")
+    id("kotlin-android-extensions")
 }
 
 android {
@@ -34,6 +35,8 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
+    implementation("io.reactivex.rxjava2:rxandroid:2.1.1")
+    implementation("io.reactivex.rxjave2:rxkotlin:2.4.0")
     implementation("org.jsoup:jsoup:1.13.1")
 
     implementation("androidx.appcompat:appcompat:1.6.1")
