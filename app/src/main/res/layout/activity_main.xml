@@ -32,6 +32,7 @@
         android:textOn="STOP\nSCAN"
         android:textSize="22dp"
         android:textStyle="bold"
+        android:background="@drawable/scan_background"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.106"
@@ -56,7 +57,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.95" />
 
-    <Button
+    <android.widget.Button
         android:id="@+id/Btn_send_data"
         android:layout_width="120dp"
         android:layout_height="70dp"
@@ -64,6 +65,7 @@
         android:text="SEND\nDATA"
         android:textSize="22dp"
         android:textStyle="bold"
+        android:background="#C2B4D6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.896"
@@ -71,7 +73,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.95" />
 
-    <Button
+    <android.widget.Button
         android:id="@+id/Btn_delete_all"
         android:layout_width="80dp"
         android:layout_height="60dp"
@@ -80,6 +82,8 @@
         android:textSize="18dp"
         android:textStyle="bold"
         android:visibility="visible"
+        android:background="#333D51"
+        android:textColor="#ffffff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.3"
@@ -87,7 +91,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.820" />
 
-    <Button
+    <android.widget.Button
         android:id="@+id/Btn_delete_latest_value"
         android:layout_width="80dp"
         android:layout_height="60dp"
@@ -96,6 +100,8 @@
         android:textSize="18dp"
         android:textStyle="bold"
         android:visibility="visible"
+        android:background="#57648C"
+        android:textColor="#ffffff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.7"
@@ -103,13 +109,15 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.820" />
 
-    <Button
+    <android.widget.Button
         android:id="@+id/Btn_view_sensing_data"
         android:layout_width="140dp"
         android:layout_height="50dp"
         android:text="check data"
         android:textSize="18dp"
         android:textStyle="bold"
+        android:background="@drawable/button_checkdata"
+        android:textColor="#ffffff"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.907"

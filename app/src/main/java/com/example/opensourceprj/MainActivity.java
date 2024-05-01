@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tv_data;
     private Switch switch_directly_send;
+    private Toast toast;
 
     private static final String receiver = "2jo"; // 팀명
     private static final String[] raspberryPiAddr_1 = {
@@ -110,10 +111,11 @@ public class MainActivity extends AppCompatActivity {
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
 
+        toast = Toast.makeText(MainActivity.this, null, Toast.LENGTH_SHORT);
+
         if (blead == null) {
-            Toast.makeText(getApplicationContext(), "Bluetooth is not available", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Bluetooth is available", Toast.LENGTH_SHORT).show();
+            toast.setText("Bluetooth is not available");
+            toast.show();
         }
 
         // 블루투스 기능 비활성화 시 팝업 메시지 생성
@@ -186,7 +188,8 @@ public class MainActivity extends AppCompatActivity {
                     if (br.readLine() == "") {
                         br.close();
                         fr.close();
-                        Toast.makeText(MainActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
+                        toast.setText("파일이 비어있습니다.");
+                        toast.show();
                     } else {
                         br.close();
                         fr.close();
@@ -275,7 +278,8 @@ public class MainActivity extends AppCompatActivity {
                                         throw new RuntimeException(e);
                                     }
                                 } else {
-                                    Toast.makeText(MainActivity.this, "NETWORK NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                                    toast.setText("NETWORK NOT CONNECTED");
+                                    toast.show();
                                 }
                             }
                         });
@@ -410,14 +414,16 @@ public class MainActivity extends AppCompatActivity {
         if (on) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                     ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "No permission", Toast.LENGTH_SHORT).show();
+                toast.setText("No permission");
+                toast.show();
             }
 
             if (blead.isEnabled()) {
                 // bluetooth 스캔 시작
                 blead.startLeScan(scancallback_le);
             } else {
-                Toast.makeText(this, "Bluetooth is off", Toast.LENGTH_SHORT).show();
+                toast.setText("Bluetooth is off");
+                toast.show();
                 ((ToggleButton) v).setChecked(false);
             }
         } else {
@@ -479,6 +485,9 @@ public class MainActivity extends AppCompatActivity {
                             });
                             br.close();
                             fr.close();
+
+                            toast.setText(sensorTeam + ": " + sensingTime);
+                            toast.show();
                         } catch (FileNotFoundException e) {
                             throw new RuntimeException(e);
                         } catch (IOException e) {
@@ -489,7 +498,8 @@ public class MainActivity extends AppCompatActivity {
                         toggle_btn_scan.setChecked(false);
                         blead.stopLeScan(scancallback_le);
 
-                        Toast.makeText(MainActivity.this, "NETWORK NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                        toast.setText("NETWORK NOT CONNECTED");
+                        toast.show();
                     }
                 } else {
                     BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, Integer.valueOf(OTP), pmData);
