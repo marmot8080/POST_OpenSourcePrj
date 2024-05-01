@@ -7,9 +7,11 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -49,12 +51,11 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private Button btn_send_data, btn_delete_all, btn_delete_latest_value, Btn_sensingPage_view;
+
+    private Button btn_send_data, btn_delete_all, btn_delete_latest_value, btn_view_sensing_data;
+
     private TextView tv_data;
     private Switch switch_directly_send;
-
-    // crewling sensing page url
-    private String sensing_Page_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/";
 
     private static final String receiver = "2jo"; // 팀명
     private static final String[] raspberryPiAddr_1 = {
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] raspberryPiAddr_3 = {
             "D8:3A:DD:79:8E:D9",
             "D8:3A:DD:42:AC:9A",
-            "D8:3A:DD:42:A8:FB",
+            "D8:3A:DD:42:AB:FB",
             "D8:3A:DD:79:8E:9B"
     }; // 3조 라즈베리파이 Mac address
     private static final String[] raspberryPiAddr_4 = {
@@ -133,8 +134,9 @@ public class MainActivity extends AppCompatActivity {
             FileReader fr = new FileReader(file.getAbsoluteFile());
             BufferedReader br = new BufferedReader(fr);
 
-            tv_data = findViewById(R.id.Txt_tv);
+            tv_data = findViewById(R.id.Text_view_data);
             tv_data.setText("");
+            tv_data.setMovementMethod(new ScrollingMovementMethod());
 
             String line;
             while ((line = br.readLine()) != null) {
@@ -157,6 +159,15 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         service = retrofit.create(comm_data.class);
+
+        btn_view_sensing_data = findViewById(R.id.Btn_view_sensing_data);
+        btn_view_sensing_data.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, ServerCrawlingActivity.class);
+                startActivity(intent);
+            }
+        });
 
         btn_send_data = findViewById(R.id.Btn_send_data);
         btn_send_data.setOnClickListener(new View.OnClickListener() {
@@ -244,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
                                             }
                                         }
 
-                                        tv_data = findViewById(R.id.Txt_tv);
+                                        tv_data = findViewById(R.id.Text_view_data);
                                         tv_data.setText("");
                                         br.close();
                                         br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
@@ -303,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
 
                             bw.write("");
 
-                            tv_data = findViewById(R.id.Txt_tv);
+                            tv_data = findViewById(R.id.Text_view_data);
                             tv_data.setText("");
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -370,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
                             bw.close();
                             fw.close();
 
-                            tv_data = findViewById(R.id.Txt_tv);
+                            tv_data = findViewById(R.id.Text_view_data);
                             tv_data.setText("");
                             fr = new FileReader(file.getAbsoluteFile());
                             br = new BufferedReader(fr);
@@ -508,7 +519,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     try {
-                        tv_data = findViewById(R.id.Txt_tv);
+                        tv_data = findViewById(R.id.Text_view_data);
                         tv_data.setText("");
                         String line;
                         BufferedReader br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
@@ -612,6 +623,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAndRequestPermissions() {
+        // 필요 권한 확인
         String[] permissions = {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,

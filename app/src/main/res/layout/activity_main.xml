@@ -7,12 +7,14 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/Txt_tv"
+        android:id="@+id/Text_view_data"
         android:layout_width="360dp"
         android:layout_height="480dp"
         android:gravity="center"
         android:hint="show data"
         android:textSize="16dp"
+        android:maxLines="1000"
+        android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -45,7 +47,7 @@
         android:onClick="onToggleDelete"
         android:textOff="delete"
         android:textOn="X"
-        android:textSize="16dp"
+        android:textSize="12dp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -102,7 +104,7 @@
         app:layout_constraintVertical_bias="0.820" />
 
     <Button
-        android:id="@+id/Btn_sensingPage_view"
+        android:id="@+id/Btn_view_sensing_data"
         android:layout_width="140dp"
         android:layout_height="50dp"
         android:text="check data"
