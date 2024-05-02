@@ -30,31 +30,30 @@ public class ServerCrawlingActivity extends AppCompatActivity {
                 finish();
             }
         });
+
+        /*
         btn_refresh = findViewById(R.id.Btn_refresh);
         btn_refresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // 페이지 새로고침
-                @Override
-                public void run() {
-                    try {
-                        // start Crawling
-                        //Document doc = Jsoup.connect(server_URL).get();	//URL 웹사이트에 있는 html 코드 Crawling
 
-                /*Elements sensDataNum = doc.select(".");	//끌어온 html에서 클래스네임이 "" 인 값만 선택해서 빼오기
+                // start Crawling
+                Document doc = Jsoup.connect(server_URL).get();	//URL 웹사이트에 있는 html 코드 Crawling
+                Elements sensDataNum = doc.select(".");	//끌어온 html에서 클래스네임이 "" 인 값만 선택해서 빼오기
                 isEmpty = sensDataNum.isEmpty(); //빼온 값 null체크
                 Log.d("Tag", "isNull? : " + isEmpty); //로그캣 출력
                 if(isEmpty == false) { //null값이 아니면 크롤링 실행
                     tem = temele.get(0).text().substring();
                     bundle.putString("", tem); //bundle 이라는 자료형에 뽑아낸 결과값 담아서 main Thread로 보내기
-                */
+
                     } catch (IOException e) {
 
                         throw new RuntimeException(e);
                     }
-                }
+
             }
-        });
+        });*/
 
     }
     /*
