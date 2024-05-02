@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
 
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
-
         toast = Toast.makeText(MainActivity.this, null, Toast.LENGTH_SHORT);
 
         if (blead == null) {
@@ -126,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
             customDialog.show();
         }
 
-        try {
+        try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
             if (!file.exists()) {
                 file.createNewFile();
@@ -169,10 +168,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // 버튼이 invisible하게 기본 설정
         btn_delete_all = findViewById(R.id.Btn_delete_all);
-        btn_delete_all.setVisibility(View.GONE);
-
         btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+        btn_delete_all.setVisibility(View.GONE);
         btn_delete_latest_value.setVisibility(View.GONE);
     }
 
@@ -181,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (on) {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                     ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
                 toast.setText("No permission");
                 toast.show();
