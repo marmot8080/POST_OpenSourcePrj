@@ -23,13 +23,13 @@
     <TextView
         android:id="@+id/Text_sensing_data"
         android:layout_width="370dp"
-        android:layout_height="642dp"
+        android:layout_height="320dp"
         tools:layout_editor_absoluteX="20dp"
         tools:layout_editor_absoluteY="73dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintVertical_bias="0.75"
+        app:layout_constraintVertical_bias="0.165"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -46,4 +46,18 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.02"
         app:srcCompat="@android:drawable/ic_popup_sync" />
+
+    <WebView
+        android:id="@+id/Img_sensing_data"
+        android:layout_width="370dp"
+        android:layout_height="320dp"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="389dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintVertical_bias="0.965"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
