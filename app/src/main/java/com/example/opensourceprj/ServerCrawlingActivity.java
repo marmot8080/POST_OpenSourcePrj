@@ -19,13 +19,18 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class ServerCrawlingActivity extends AppCompatActivity {
     private Button btn_back;
     private ImageButton btn_refresh;
-
     private WebView web_data;
-    private TextView show_data;
+    private TextView text_1jo_data;
+    private TextView text_2jo_data;
+    private TextView text_3jo_data;
+    private TextView text_4jo_data;
+    private TextView text_5jo_data;
+
     private final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
 
     @Override
@@ -51,7 +56,7 @@ public class ServerCrawlingActivity extends AppCompatActivity {
             }
         });
 
-        web_data = findViewById(R.id.Img_sensing_data);
+        web_data = findViewById(R.id.Web_server_data);
 
         setWebViewPermissions(web_data);
 
@@ -85,18 +90,29 @@ public class ServerCrawlingActivity extends AppCompatActivity {
         Elements sensorData = doc.getElementsByTag("tr");
 
         if (!sensorData.isEmpty()) {
-            show_data = findViewById(R.id.Text_sensing_data);
-            show_data.setText("");
+            text_1jo_data = findViewById(R.id.Text_1jo);
+            text_2jo_data = findViewById(R.id.Text_2jo);
+            text_3jo_data = findViewById(R.id.Text_3jo);
+            text_4jo_data = findViewById(R.id.Text_4jo);
+            text_5jo_data = findViewById(R.id.Text_5jo);
+            ArrayList<Integer> serverData = new ArrayList<>();
 
             for(Element row: sensorData) {
                 Elements rowDatas = row.select("th");
 
-                for(Element data: rowDatas) {
-                    show_data.append(data.text() + " ");
+                if(rowDatas.first().text().equals("2조")) {
+                    for(Element data: rowDatas) {
+                        if(data.text().equals("2조")) continue;
+                        serverData.add(Integer.valueOf(data.text()));
+                    }
                 }
-
-                show_data.append("\n");
             }
+
+            text_1jo_data.setText(String.valueOf(serverData.get(0)));
+            text_2jo_data.setText(String.valueOf(serverData.get(1)));
+            text_3jo_data.setText(String.valueOf(serverData.get(2)));
+            text_4jo_data.setText(String.valueOf(serverData.get(3)));
+            text_5jo_data.setText(String.valueOf(serverData.get(4)));
 
             Log.d("Tag", "isNull? : " + "Non Null");
         } else {
