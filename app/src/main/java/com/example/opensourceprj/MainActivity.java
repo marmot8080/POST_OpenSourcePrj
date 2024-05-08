@@ -9,12 +9,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,6 +24,11 @@ import android.widget.ToggleButton;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -51,12 +58,14 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private Button btn_send_data, btn_delete_all, btn_delete_latest_value, btn_view_sensing_data;
-    private TextView tv_data;
+    private ImageButton btn_refresh;
+    private Button btn_delete_all, btn_delete_latest_value, btn_view_sensing_data;
+    private TextView tv_data, text_1jo_data, text_2jo_data, text_3jo_data, text_4jo_data, text_5jo_data;
     private Switch switch_directly_send;
     private Toast toast;
 
     private static final String receiver = "2jo"; // 팀명
+    private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",
             "D8:3A:DD:42:AC:64",
@@ -150,6 +159,9 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         }
 
+        // 서버 데이터 크롤링
+        new NetworkTask().execute();
+
         Gson gson = new GsonBuilder().setLenient().create();
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://203.255.81.72:10021/")
@@ -165,6 +177,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, ServerCrawlingActivity.class);
                 startActivity(intent);
+            }
+        });
+
+        btn_refresh = findViewById(R.id.Btn_refresh);
+        btn_refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new NetworkTask().execute();
             }
         });
 
@@ -420,6 +440,8 @@ public class MainActivity extends AppCompatActivity {
                             } catch (InterruptedException e) {
                                 throw new RuntimeException(e);
                             }
+                            // 서버 데이터 업데이트
+                            new NetworkTask().execute();
                         } else {
                             toast.setText("NETWORK NOT CONNECTED");
                             toast.show();
@@ -483,6 +505,8 @@ public class MainActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
+                        // 서버 데이터 업데이트
+                        new NetworkTask().execute();
                     } else {
                         toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
                         toggle_btn_scan.setChecked(false);
@@ -623,6 +647,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAndRequestPermissions() {
+        // 필요 권한 확인
         String[] permissions = {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -642,6 +667,62 @@ public class MainActivity extends AppCompatActivity {
         if (!permissionsNeeded.isEmpty()) {
             // 사용자에게 권한 요청 다이얼로그 표시
             ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    private class NetworkTask extends AsyncTask<Void, Void, Document> {
+
+        @Override
+        protected Document doInBackground(Void... voids) {
+            try {
+                return Jsoup.connect(server_URL).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Document document) {
+            if (document != null) {
+                crawlData(document);
+            } else {
+                // 요청 실패 처리
+            }
+        }
+    }
+
+    public void crawlData(Document doc) {
+        Elements sensorData = doc.getElementsByTag("tr");
+
+        if (!sensorData.isEmpty()) {
+            text_1jo_data = findViewById(R.id.Text_1jo);
+            text_2jo_data = findViewById(R.id.Text_2jo);
+            text_3jo_data = findViewById(R.id.Text_3jo);
+            text_4jo_data = findViewById(R.id.Text_4jo);
+            text_5jo_data = findViewById(R.id.Text_5jo);
+            ArrayList<Integer> serverData = new ArrayList<>();
+
+            for(Element row: sensorData) {
+                Elements rowDatas = row.select("th");
+
+                if(rowDatas.first().text().equals("2조")) {
+                    for(Element data: rowDatas) {
+                        if(data.text().equals("2조")) continue;
+                        serverData.add(Integer.valueOf(data.text()));
+                    }
+                }
+            }
+
+            text_1jo_data.setText(String.valueOf(serverData.get(0)));
+            text_2jo_data.setText(String.valueOf(serverData.get(1)));
+            text_3jo_data.setText(String.valueOf(serverData.get(2)));
+            text_4jo_data.setText(String.valueOf(serverData.get(3)));
+            text_5jo_data.setText(String.valueOf(serverData.get(4)));
+
+            Log.d("Tag", "isNull? : " + "Non Null");
+        } else {
+            Log.d("Tag", "isNull? : " + "Null");
         }
     }
 }
