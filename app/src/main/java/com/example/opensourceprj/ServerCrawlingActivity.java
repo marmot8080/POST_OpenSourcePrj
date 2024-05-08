@@ -70,7 +70,7 @@ public class ServerCrawlingActivity extends AppCompatActivity {
         sensingWebView.getSettings().setUseWideViewPort(true); // wide viewport 설정 - setLoadWithOverviewMode와 같이 사용
 
         sensingWebView.getSettings().setSupportZoom(true); // 줌 설정 여부
-        sensingWebView.getSettings().setBuiltInZoomControls(false); // 줌 확대/축소 버튼 여부
+        sensingWebView.getSettings().setBuiltInZoomControls(true); // 줌 확대/축소 버튼 여부
 
         sensingWebView.getSettings().setJavaScriptEnabled(true); // 자바스크립트 사용여부
             // ==  webview.addJavascriptInterface(new AndroidBridge(), "android");
