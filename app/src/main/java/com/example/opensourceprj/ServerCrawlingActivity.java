@@ -24,7 +24,7 @@ public class ServerCrawlingActivity extends AppCompatActivity {
     private Button btn_back;
     private ImageButton btn_refresh;
 
-    private WebView show_Web;
+    private WebView web_data;
     private TextView show_data;
     private final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
 
@@ -53,34 +53,21 @@ public class ServerCrawlingActivity extends AppCompatActivity {
         new NetworkTask().execute();
 
 
-        WebView sensingWebView = (WebView) findViewById(R.id.Img_sensing_data);
+        web_data = findViewById(R.id.Img_sensing_data);
 
-        sensingWebView.setWebViewClient(new WebViewClient()); // 새 창 띄우지 않기
-        sensingWebView.setWebChromeClient(new WebChromeClient());
-        /*
-        sensingWebView.setDownloadListener(new DownloadListener() { // 파일 다운로드 설정
-            @Override
-            public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype, long contentLength) {
+        web_data.setWebViewClient(new WebViewClient()); // 새 창 띄우지 않기
+        web_data.setWebChromeClient(new WebChromeClient());
+        web_data.getSettings().setLoadWithOverviewMode(true); // WebView 화면크기에 맞추도록 설정
+        web_data.getSettings().setUseWideViewPort(true); // wide viewport 설정 - setLoadWithOverviewMode와 같이 사용
+        web_data.getSettings().setSupportZoom(true); // 줌 설정 여부
+        web_data.getSettings().setBuiltInZoomControls(true); // 줌 확대/축소 버튼 여부
+        web_data.getSettings().setJavaScriptEnabled(true); // 자바스크립트 사용여부
+        web_data.getSettings().setJavaScriptCanOpenWindowsAutomatically(true); // javascript가 window.open()를 사용할 수 있도록 설정
+        web_data.getSettings().setSupportZoom(true); // 멀티 윈도우 사용 여부
+        web_data.getSettings().setDomStorageEnabled(true); // 로컬 스토리지(localStorage) 사용여부
 
-            }
-        });
-        */
-
-        sensingWebView.getSettings().setLoadWithOverviewMode(true); // WebView 화면크기에 맞추도록 설정
-        sensingWebView.getSettings().setUseWideViewPort(true); // wide viewport 설정 - setLoadWithOverviewMode와 같이 사용
-
-        sensingWebView.getSettings().setSupportZoom(true); // 줌 설정 여부
-        sensingWebView.getSettings().setBuiltInZoomControls(false); // 줌 확대/축소 버튼 여부
-
-        sensingWebView.getSettings().setJavaScriptEnabled(true); // 자바스크립트 사용여부
-            // ==  webview.addJavascriptInterface(new AndroidBridge(), "android");
-        sensingWebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true); // javascr ipt가 window.open()를 사용할 수 있도록 설정
-        sensingWebView.getSettings().setSupportZoom(true); // 멀티 윈도우 사용 여부
-
-        sensingWebView.getSettings().setDomStorageEnabled(true); // 로컬 스토리지(localStorage) 사용여부
-
-        // 웹페이지 호출 // webView.loadUrl(server_URL);
-        sensingWebView.loadUrl(server_URL);
+        // 웹페이지 호출
+        web_data.loadUrl(server_URL);
 
     }
 
