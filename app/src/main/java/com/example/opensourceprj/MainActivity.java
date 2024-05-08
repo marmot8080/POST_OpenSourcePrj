@@ -478,7 +478,6 @@ public class MainActivity extends AppCompatActivity {
                             if (!file.exists()) {
                                 file.createNewFile();
                             }
-
                             FileReader fr = new FileReader(file.getAbsoluteFile());
                             BufferedReader br = new BufferedReader(fr);
 
