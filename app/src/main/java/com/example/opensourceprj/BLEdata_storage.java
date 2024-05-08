@@ -1,7 +1,5 @@
 package com.example.opensourceprj;
 
-import android.view.View;
-
 public class BLEdata_storage {
     private String sensorTeam;
     private String macAddr;

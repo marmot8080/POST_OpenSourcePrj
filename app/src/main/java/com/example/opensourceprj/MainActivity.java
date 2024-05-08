@@ -7,18 +7,28 @@ import androidx.core.content.ContextCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -48,10 +58,14 @@ public class MainActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private Button btn_send_data, btn_delete_all, btn_delete_latest_value;
-    private TextView tv_data;
+    private ImageButton btn_refresh;
+    private Button btn_delete_all, btn_delete_latest_value, btn_view_sensing_data;
+    private TextView tv_data, text_1jo_data, text_2jo_data, text_3jo_data, text_4jo_data, text_5jo_data;
+    private Switch switch_directly_send;
+    private Toast toast;
 
     private static final String receiver = "2jo"; // 팀명
+    private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",
             "D8:3A:DD:42:AC:64",
@@ -67,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String[] raspberryPiAddr_3 = {
             "D8:3A:DD:79:8E:D9",
             "D8:3A:DD:42:AC:9A",
-            "D8:3A:DD:42:A8:FB",
+            "D8:3A:DD:42:AB:FB",
             "D8:3A:DD:79:8E:9B"
     }; // 3조 라즈베리파이 Mac address
     private static final String[] raspberryPiAddr_4 = {
@@ -103,11 +117,11 @@ public class MainActivity extends AppCompatActivity {
 
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
+        toast = Toast.makeText(MainActivity.this, null, Toast.LENGTH_SHORT);
 
         if (blead == null) {
-            Toast.makeText(getApplicationContext(), "Bluetooth is not available", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Bluetooth is available", Toast.LENGTH_SHORT).show();
+            toast.setText("Bluetooth is not available");
+            toast.show();
         }
 
         // 블루투스 기능 비활성화 시 팝업 메시지 생성
@@ -120,20 +134,21 @@ public class MainActivity extends AppCompatActivity {
             customDialog.show();
         }
 
-        try {
+        try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-            if(!file.exists()) {
+            if (!file.exists()) {
                 file.createNewFile();
             }
             FileReader fr = new FileReader(file.getAbsoluteFile());
             BufferedReader br = new BufferedReader(fr);
 
-            tv_data = findViewById(R.id.Txt_tv);
+            tv_data = findViewById(R.id.Text_view_data);
             tv_data.setText("");
+            tv_data.setMovementMethod(new ScrollingMovementMethod());
 
             String line;
-            while((line = br.readLine())!=null) {
-                tv_data.setText(tv_data.getText()+line+"\n");
+            while ((line = br.readLine()) != null) {
+                tv_data.setText(tv_data.getText() + line + "\n");
             }
 
             fr.close();
@@ -144,6 +159,9 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException(e);
         }
 
+        // 서버 데이터 크롤링
+        new NetworkTask().execute();
+
         Gson gson = new GsonBuilder().setLenient().create();
         retrofit = new Retrofit.Builder()
                 .baseUrl("http://203.255.81.72:10021/")
@@ -153,104 +171,161 @@ public class MainActivity extends AppCompatActivity {
 
         service = retrofit.create(comm_data.class);
 
-        btn_send_data = findViewById(R.id.Btn_send_data);
-        btn_send_data.setOnClickListener(new View.OnClickListener() {
+        btn_view_sensing_data = findViewById(R.id.Btn_view_sensing_data);
+        btn_view_sensing_data.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try{
+                Intent intent = new Intent(MainActivity.this, ServerCrawlingActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        btn_refresh = findViewById(R.id.Btn_refresh);
+        btn_refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new NetworkTask().execute();
+            }
+        });
+
+        // 버튼이 invisible하게 기본 설정
+        btn_delete_all = findViewById(R.id.Btn_delete_all);
+        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+        btn_delete_all.setVisibility(View.GONE);
+        btn_delete_latest_value.setVisibility(View.GONE);
+    }
+
+    public void onToggleScan(View v) {
+        boolean on = ((ToggleButton) v).isChecked();
+
+        if (on) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                toast.setText("No permission");
+                toast.show();
+            }
+
+            if (blead.isEnabled()) {
+                // bluetooth 스캔 시작
+                blead.startLeScan(scancallback_le);
+            } else {
+                toast.setText("Bluetooth is off");
+                toast.show();
+                ((ToggleButton) v).setChecked(false);
+            }
+        } else {
+            blead.stopLeScan(scancallback_le);
+        }
+    }
+
+    public void onToggleDelete(View v) {
+        boolean on = ((ToggleButton) v).isChecked();
+        btn_delete_all = findViewById(R.id.Btn_delete_all);
+        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+
+        if (on) {
+            btn_delete_all.setVisibility(View.VISIBLE);
+            btn_delete_latest_value.setVisibility(View.VISIBLE);
+        } else {
+            btn_delete_all.setVisibility(View.GONE);
+            btn_delete_latest_value.setVisibility(View.GONE);
+        }
+    }
+
+    public void onDeleteAll(View v) {
+        customDialog = new CustomDialog(MainActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
+        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+            @Override
+            public void cancelClicked() {
+
+            }
+
+            @Override
+            public void acceptClicked() {
+                try {
                     File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-                    if(!file.exists()) {
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+
+                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                    BufferedWriter bw = new BufferedWriter(fw);
+
+                    bw.write("");
+
+                    tv_data = findViewById(R.id.Text_view_data);
+                    tv_data.setText("");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        customDialog.show();
+    }
+
+    public void onDeleteLatest(View v) {
+        customDialog = new CustomDialog(MainActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
+        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+            @Override
+            public void cancelClicked() {
+
+            }
+
+            @Override
+            public void acceptClicked() {
+                try {
+                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                    if (!file.exists()) {
                         file.createNewFile();
                     }
 
                     FileReader fr = new FileReader(file.getAbsoluteFile());
                     BufferedReader br = new BufferedReader(fr);
 
-                    // 파일이 비어있으면 토스트 메시지 출력
-                    if(br.readLine() == "") Toast.makeText(MainActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
-                    else{
-                        customDialog = new CustomDialog(MainActivity.this,
-                                "저장된 데이터를 서버에 전송하시겠습니까?",
-                                "취소",
-                                "전송");
-                        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-                            @Override
-                            public void cancelClicked() {
+                    datalist = new ArrayList<>();
 
-                            }
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        String[] data = line.split(",", 5);
+                        String sensorTeam = data[0];
+                        String macAddr = data[1];
+                        int OTP = Integer.valueOf(data[2]);
+                        String pmData = data[3];
+                        long sensingTime = Integer.valueOf(data[4]);
 
-                            @Override
-                            public void acceptClicked() {
-                                try {
-                                    FileReader fr = new FileReader(file.getAbsoluteFile());
-                                    BufferedReader br = new BufferedReader(fr);
-
-                                    datalist = new ArrayList<>();
-
-                                    String line;
-                                    while((line = br.readLine())!=null) {
-                                        String[] data = line.split(",", 5);
-                                        String sensorTeam = data[0];
-                                        String macAddr = data[1];
-                                        int OTP = Integer.valueOf(data[2]);
-                                        String pmData = data[3];
-                                        long sensingTime = Integer.valueOf(data[4]);
-
-                                        Call<String> call = service.post(sensorTeam, macAddr, receiver, sensingTime, OTP, pmData);
-
-                                        call.enqueue(new Callback<String>() {
-                                            @Override
-                                            public void onResponse(Call<String> call, Response<String> response) {
-                                                Log.d("ServerCommunicationSuccess", response.body().toString());
-                                            }
-
-                                            @Override
-                                            public void onFailure(Call<String> call, Throwable t) {
-                                                // 서버 전송에 실패한 데이터들은 datalist에 저장
-                                                datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
-                                                Log.d("ServerCommunicationFail", "failed to communicate with server", t);
-                                            }
-                                        });
-                                    }
-
-                                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
-                                    BufferedWriter bw = new BufferedWriter(fw);
-
-                                    bw.write("");
-                                    // 서버 전송에 실패한 datalist를 csv파일에 다시 저장
-                                    if(!datalist.isEmpty()) {
-                                        for (int i = 0; i < datalist.size(); i++) {
-                                            bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
-                                            bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
-                                            bw.write("," + String.valueOf(datalist.get(i).get_otp()));
-                                            bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
-                                            bw.write("," + String.valueOf(datalist.get(i).get_time()));
-
-                                            bw.newLine();
-                                        }
-                                    }
-
-                                    tv_data = findViewById(R.id.Txt_tv);
-                                    tv_data.setText("");
-                                    br.close();
-                                    br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
-                                    while((line = br.readLine())!=null) {
-                                        tv_data.setText(tv_data.getText()+line+"\n");
-                                    }
-
-                                    bw.close();
-                                    br.close();
-                                    fw.close();
-                                    fr.close();
-                                } catch (FileNotFoundException e) {
-                                    throw new RuntimeException(e);
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                        });
-                        customDialog.show();
+                        datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
                     }
+                    br.close();
+                    fr.close();
+
+                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    if (!datalist.isEmpty()) {
+                        for (int i = 0; i < datalist.size() - 1; i++) {
+                            bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
+                            bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
+                            bw.write("," + String.valueOf(datalist.get(i).get_otp()));
+                            bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
+                            bw.write("," + String.valueOf(datalist.get(i).get_time()));
+
+                            bw.newLine();
+                        }
+                    }
+                    bw.close();
+                    fw.close();
+
+                    tv_data = findViewById(R.id.Text_view_data);
+                    tv_data.setText("");
+                    fr = new FileReader(file.getAbsoluteFile());
+                    br = new BufferedReader(fr);
+                    while ((line = br.readLine()) != null) {
+                        tv_data.setText(tv_data.getText() + line + "\n");
+                    }
+
+                    br.close();
+                    fr.close();
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
                 } catch (IOException e) {
@@ -259,153 +334,126 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        btn_delete_all = findViewById(R.id.Btn_delete_all);
-        btn_delete_all.setVisibility(View.GONE);
-        btn_delete_all.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                customDialog = new CustomDialog(MainActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
-                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-                    @Override
-                    public void cancelClicked() {
-
-                    }
-
-                    @Override
-                    public void acceptClicked() {
-                        try {
-                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-                            if (!file.exists()) {
-                                file.createNewFile();
-                            }
-
-                            FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
-                            BufferedWriter bw = new BufferedWriter(fw);
-
-                            bw.write("");
-
-                            tv_data = findViewById(R.id.Txt_tv);
-                            tv_data.setText("");
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-
-                customDialog.show();
-            }
-        });
-
-        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
-        btn_delete_latest_value.setVisibility(View.GONE);
-        btn_delete_latest_value.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                customDialog = new CustomDialog(MainActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
-                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-                    @Override
-                    public void cancelClicked() {
-
-                    }
-
-                    @Override
-                    public void acceptClicked() {
-                        try {
-                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-                            if (!file.exists()) {
-                                file.createNewFile();
-                            }
-
-                            FileReader fr = new FileReader(file.getAbsoluteFile());
-                            BufferedReader br = new BufferedReader(fr);
-
-                            datalist = new ArrayList<>();
-
-                            String line;
-                            while ((line = br.readLine()) != null) {
-                                String[] data = line.split(",", 5);
-                                String sensorTeam = data[0];
-                                String macAddr = data[1];
-                                int OTP = Integer.valueOf(data[2]);
-                                String pmData = data[3];
-                                long sensingTime = Integer.valueOf(data[4]);
-
-                                datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
-                            }
-                            br.close();
-                            fr.close();
-
-                            FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
-                            BufferedWriter bw = new BufferedWriter(fw);
-                            if(!datalist.isEmpty()) {
-                                for (int i = 0; i < datalist.size() - 1; i++) {
-                                    bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
-                                    bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
-                                    bw.write("," + String.valueOf(datalist.get(i).get_otp()));
-                                    bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
-                                    bw.write("," + String.valueOf(datalist.get(i).get_time()));
-
-                                    bw.newLine();
-                                }
-                            }
-                            bw.close();
-                            fw.close();
-
-                            tv_data = findViewById(R.id.Txt_tv);
-                            tv_data.setText("");
-                            fr = new FileReader(file.getAbsoluteFile());
-                            br = new BufferedReader(fr);
-                            while((line = br.readLine())!=null) {
-                                tv_data.setText(tv_data.getText()+line+"\n");
-                            }
-
-                            br.close();
-                            fr.close();
-                        } catch (FileNotFoundException e) {
-                            throw new RuntimeException(e);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-
-                customDialog.show();
-            }
-        });
+        customDialog.show();
     }
 
-    public void onToggleScan(View v){
-        boolean on = ((ToggleButton) v).isChecked();
-
-        if(on) {
-            if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED){
-                Toast.makeText(this, "No permission", Toast.LENGTH_SHORT).show();
+    public void onSendData(View v) {
+        try {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+            if (!file.exists()) {
+                file.createNewFile();
             }
 
-            if(blead.isEnabled()) {
-                // bluetooth 스캔 시작
-                blead.startLeScan(scancallback_le);
+            FileReader fr = new FileReader(file.getAbsoluteFile());
+            BufferedReader br = new BufferedReader(fr);
+
+            // 파일이 비어있으면 토스트 메시지 출력
+            if (br.readLine() == "") {
+                br.close();
+                fr.close();
+                toast.setText("파일이 비어있습니다.");
+                toast.show();
             } else {
-                Toast.makeText(this, "Bluetooth is off", Toast.LENGTH_SHORT).show();
-                ((ToggleButton) v).setChecked(false);
+                br.close();
+                fr.close();
+
+                customDialog = new CustomDialog(MainActivity.this,
+                        "저장된 데이터를 서버에 전송하시겠습니까?",
+                        "취소",
+                        "전송");
+                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                    @Override
+                    public void cancelClicked() {
+
+                    }
+
+                    @Override
+                    public void acceptClicked() {
+                        if (NetworkManager.getConnectivityStatus(MainActivity.this) != NetworkManager.NOT_CONNECTED) {
+                            try {
+                                FileReader fr = new FileReader(file.getAbsoluteFile());
+                                BufferedReader br = new BufferedReader(fr);
+
+                                datalist = new ArrayList<>();
+
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    String[] data = line.split(",", 5);
+                                    String sensorTeam = data[0];
+                                    String macAddr = data[1];
+                                    int OTP = Integer.valueOf(data[2]);
+                                    String pmData = data[3];
+                                    long sensingTime = Integer.valueOf(data[4]);
+
+                                    Call<String> call = service.post(sensorTeam, macAddr, receiver, sensingTime, OTP, pmData);
+
+                                    call.enqueue(new Callback<String>() {
+                                        @Override
+                                        public void onResponse(Call<String> call, Response<String> response) {
+                                            Log.d("ServerCommunicationSuccess", response.body().toString());
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<String> call, Throwable t) {
+                                            // 서버 전송에 실패한 데이터들은 datalist에 저장
+                                            datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
+                                            Log.d("ServerCommunicationFail", "failed to communicate with server", t);
+                                        }
+                                    });
+
+                                    Thread.sleep(500);
+                                }
+
+                                FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                                BufferedWriter bw = new BufferedWriter(fw);
+
+                                bw.write("");
+                                // 서버 전송에 실패한 datalist를 csv파일에 다시 저장
+                                if (!datalist.isEmpty()) {
+                                    for (int i = 0; i < datalist.size(); i++) {
+                                        bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
+                                        bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
+                                        bw.write("," + String.valueOf(datalist.get(i).get_otp()));
+                                        bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
+                                        bw.write("," + String.valueOf(datalist.get(i).get_time()));
+
+                                        bw.newLine();
+                                    }
+                                }
+
+                                tv_data = findViewById(R.id.Text_view_data);
+                                tv_data.setText("");
+                                br.close();
+                                br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+                                while ((line = br.readLine()) != null) {
+                                    tv_data.setText(tv_data.getText() + line + "\n");
+                                }
+
+                                bw.close();
+                                br.close();
+                                fw.close();
+                                fr.close();
+                            } catch (FileNotFoundException e) {
+                                throw new RuntimeException(e);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                            // 서버 데이터 업데이트
+                            new NetworkTask().execute();
+                        } else {
+                            toast.setText("NETWORK NOT CONNECTED");
+                            toast.show();
+                        }
+                    }
+                });
+                customDialog.show();
             }
-        } else {
-            blead.stopLeScan(scancallback_le);
-        }
-    }
-
-    public void onToggleDelete(View v){
-        boolean on = ((ToggleButton) v).isChecked();
-        btn_delete_all = findViewById(R.id.Btn_delete_all);
-        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
-
-        if(on) {
-            btn_delete_all.setVisibility(View.VISIBLE);
-            btn_delete_latest_value.setVisibility(View.VISIBLE);
-        } else {
-            btn_delete_all.setVisibility(View.GONE);
-            btn_delete_latest_value.setVisibility(View.GONE);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -415,116 +463,101 @@ public class MainActivity extends AppCompatActivity {
             String MacAddr = device.getAddress();
             String sensorTeam = checkRaspPiAddr(MacAddr);
 
-            if(sensorTeam != null) {
-                toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
-                toggle_btn_scan.setChecked(false);
-                blead.stopLeScan(scancallback_le);
-
+            if (sensorTeam != null) {
                 String hexData = byteArrayToHex(scanRecord);
                 int sensingTime = Integer.valueOf(extractSensingTime(hexData));
+                String OTP = extractOTP(hexData);
+                String pmData = extractSensorData(hexData);
 
-                if(datalist.isEmpty() || datalist.get(datalist.size() - 1).get_time() != sensingTime){
+                switch_directly_send = findViewById(R.id.Switch_directly_send);
 
-                    // 저장 여부 팝업 메시지 없이 계속 저장 실행
-                    String OTP = extractOTP(hexData);
-                    String pmData = extractSensorData(hexData);
+                if (switch_directly_send.isChecked() == true) {
+                    if (NetworkManager.getConnectivityStatus(MainActivity.this) != NetworkManager.NOT_CONNECTED) {
+                        try {
+                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                            if (!file.exists()) {
+                                file.createNewFile();
+                            }
+                            FileReader fr = new FileReader(file.getAbsoluteFile());
+                            BufferedReader br = new BufferedReader(fr);
 
+                            Call<String> call = service.post(sensorTeam, MacAddr, receiver, sensingTime, Integer.valueOf(OTP), pmData);
+
+                            call.enqueue(new Callback<String>() {
+                                @Override
+                                public void onResponse(Call<String> call, Response<String> response) {
+                                    Log.d("ServerCommunicationSuccess", response.body().toString());
+                                }
+
+                                @Override
+                                public void onFailure(Call<String> call, Throwable t) {
+                                    Log.d("ServerCommunicationFail", "failed to communicate with server", t);
+                                }
+                            });
+                            br.close();
+                            fr.close();
+
+                            toast.setText(sensorTeam + ": " + sensingTime);
+                            toast.show();
+                        } catch (FileNotFoundException e) {
+                            throw new RuntimeException(e);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        // 서버 데이터 업데이트
+                        new NetworkTask().execute();
+                    } else {
+                        toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
+                        toggle_btn_scan.setChecked(false);
+                        blead.stopLeScan(scancallback_le);
+
+                        toast.setText("NETWORK NOT CONNECTED");
+                        toast.show();
+                    }
+                } else {
                     BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, Integer.valueOf(OTP), pmData);
                     datalist.add(data);
 
                     try {
                         File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-                        if(!file.exists()) {
+                        if (!file.exists()) {
                             file.createNewFile();
                         }
 
                         FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
                         BufferedWriter bw = new BufferedWriter(fw);
 
-                        bw.write(String.valueOf(datalist.get(datalist.size()-1).get_sensor_team()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_mac_addr()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_otp()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_pm_data()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_time()));
+                        bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_mac_addr()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_otp()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_pm_data()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_time()));
 
                         bw.newLine();
 
                         bw.close();
                         fw.close();
-                    }catch (IOException e) {
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
 
-                    try{
-                        tv_data = findViewById(R.id.Txt_tv);
+                    try {
+                        tv_data = findViewById(R.id.Text_view_data);
                         tv_data.setText("");
                         String line;
                         BufferedReader br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
-                        while((line = br.readLine())!=null) {
-                            tv_data.setText(tv_data.getText()+line+"\n");
+                        while ((line = br.readLine()) != null) {
+                            tv_data.setText(tv_data.getText() + line + "\n");
                         }
-                    }catch (IOException e){
+                    } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
+                }
 
-                    /*customDialog = new CustomDialog(MainActivity.this,
-                            "센서 데이터를 읽어왔습니다.\n저장하시겠습니까?",
-                            "취소",
-                            "저장");
-
-                    customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-                        @Override
-                        public void cancelClicked() {
-
-                        }
-
-                        @Override
-                        public void acceptClicked() {
-                            String OTP = extractOTP(hexData);
-                            String pmData = extractSensorData(hexData);
-
-                            BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, Integer.valueOf(OTP), pmData);
-                            datalist.add(data);
-
-                            try {
-                                File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
-                                if(!file.exists()) {
-                                    file.createNewFile();
-                                }
-
-                                FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-                                BufferedWriter bw = new BufferedWriter(fw);
-
-                                bw.write(String.valueOf(datalist.get(datalist.size()-1).get_sensor_team()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_mac_addr()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_otp()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_pm_data()));
-                                bw.write("," + String.valueOf(datalist.get(datalist.size()-1).get_time()));
-
-                                bw.newLine();
-
-                                bw.close();
-                                fw.close();
-                            }catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-
-                            try{
-                                tv_data = findViewById(R.id.Txt_tv);
-                                tv_data.setText("");
-                                String line;
-                                BufferedReader br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
-                                while((line = br.readLine())!=null) {
-                                    tv_data.setText(tv_data.getText()+line+"\n");
-                                }
-                            }catch (IOException e){
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    });
-                    */
-
-                    customDialog.show();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -613,6 +646,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAndRequestPermissions() {
+        // 필요 권한 확인
         String[] permissions = {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
@@ -632,6 +666,62 @@ public class MainActivity extends AppCompatActivity {
         if (!permissionsNeeded.isEmpty()) {
             // 사용자에게 권한 요청 다이얼로그 표시
             ActivityCompat.requestPermissions(this, permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    private class NetworkTask extends AsyncTask<Void, Void, Document> {
+
+        @Override
+        protected Document doInBackground(Void... voids) {
+            try {
+                return Jsoup.connect(server_URL).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Document document) {
+            if (document != null) {
+                crawlData(document);
+            } else {
+                // 요청 실패 처리
+            }
+        }
+    }
+
+    public void crawlData(Document doc) {
+        Elements sensorData = doc.getElementsByTag("tr");
+
+        if (!sensorData.isEmpty()) {
+            text_1jo_data = findViewById(R.id.Text_1jo);
+            text_2jo_data = findViewById(R.id.Text_2jo);
+            text_3jo_data = findViewById(R.id.Text_3jo);
+            text_4jo_data = findViewById(R.id.Text_4jo);
+            text_5jo_data = findViewById(R.id.Text_5jo);
+            ArrayList<Integer> serverData = new ArrayList<>();
+
+            for(Element row: sensorData) {
+                Elements rowDatas = row.select("th");
+
+                if(rowDatas.first().text().equals("2조")) {
+                    for(Element data: rowDatas) {
+                        if(data.text().equals("2조")) continue;
+                        serverData.add(Integer.valueOf(data.text()));
+                    }
+                }
+            }
+
+            text_1jo_data.setText(String.valueOf(serverData.get(0)));
+            text_2jo_data.setText(String.valueOf(serverData.get(1)));
+            text_3jo_data.setText(String.valueOf(serverData.get(2)));
+            text_4jo_data.setText(String.valueOf(serverData.get(3)));
+            text_5jo_data.setText(String.valueOf(serverData.get(4)));
+
+            Log.d("Tag", "isNull? : " + "Non Null");
+        } else {
+            Log.d("Tag", "isNull? : " + "Null");
         }
     }
 }
