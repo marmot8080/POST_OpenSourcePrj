@@ -68,7 +68,6 @@ public class ServerCrawlingActivity extends AppCompatActivity {
 
         // 웹페이지 호출
         web_data.loadUrl(server_URL);
-
     }
 
     private class NetworkTask extends AsyncTask<Void, Void, Document> {
