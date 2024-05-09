@@ -34,7 +34,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     private ArrayList<String> deviceAddressArray;
 
     private TextView text_view_status;
-    private Button btn_paired, btn_send;
+    private Button btn_back;
     private ListView list_view_paired_adapter;
 
     @Override
@@ -50,6 +50,14 @@ public class PairDeviceActivity extends AppCompatActivity {
         list_view_paired_adapter.setAdapter(btArrayAdapter);
 
         list_view_paired_adapter.setOnItemClickListener(new myOnItemClickListener());
+
+        btn_back = findViewById(R.id.Btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     public void onClickButtonPaired(View view) {

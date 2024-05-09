@@ -6,6 +6,20 @@
     android:layout_height="match_parent"
     tools:context=".PairDeviceActivity">
 
+    <Button
+        android:id="@+id/Btn_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:textSize="18dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.05"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.02" />
+
     <TextView
         android:id="@+id/Text_view_status"
         android:layout_width="400dp"
@@ -25,7 +39,7 @@
         android:id="@+id/Btn_paired"
         android:layout_width="wrap_content"
         android:layout_height="56dp"
-        android:hint="paired device"
+        android:text="paired device"
         android:onClick="onClickButtonPaired"
         android:textSize="18dp"
         android:textStyle="bold"
@@ -40,7 +54,7 @@
         android:id="@+id/Btn_send"
         android:layout_width="wrap_content"
         android:layout_height="56dp"
-        android:hint="send"
+        android:text="send"
         android:onClick="onClickButtonSend"
         android:textSize="18dp"
         android:textStyle="bold"
@@ -54,12 +68,12 @@
     <ListView
         android:id="@+id/List_view_paired_adapter"
         android:layout_width="400dp"
-        android:layout_height="480dp"
+        android:layout_height="400dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.025" />
+        app:layout_constraintVertical_bias="0.25" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

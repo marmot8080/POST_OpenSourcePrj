@@ -58,7 +58,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private Button btn_delete_all, btn_delete_latest_value;
+    private Button btn_delete_all, btn_delete_latest_value, btn_back;
     private TextView tv_data, text_1jo_data, text_2jo_data, text_3jo_data, text_4jo_data, text_5jo_data;
     private Switch switch_directly_send;
     private Toast toast;
@@ -172,6 +172,14 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
         btn_delete_all.setVisibility(View.GONE);
         btn_delete_latest_value.setVisibility(View.GONE);
+
+        btn_back = findViewById(R.id.Btn_back);
+        btn_back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     public void onToggleScan(View v) {
