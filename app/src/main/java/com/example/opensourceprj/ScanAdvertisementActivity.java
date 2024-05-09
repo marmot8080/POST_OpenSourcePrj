@@ -50,7 +50,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class ScanAdvertisementActivity extends AppCompatActivity {
     private Retrofit retrofit;
     private comm_data service;
     private BluetoothAdapter blead;
@@ -112,13 +112,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_scan_advertisement);
 
         checkAndRequestPermissions(); // 권한 확인
 
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
-        toast = Toast.makeText(MainActivity.this, null, Toast.LENGTH_SHORT);
+        toast = Toast.makeText(ScanAdvertisementActivity.this, null, Toast.LENGTH_SHORT);
 
         if (blead == null) {
             toast.setText("Bluetooth is not available");
@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         btn_view_sensing_data.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ServerCrawlingActivity.class);
+                Intent intent = new Intent(ScanAdvertisementActivity.this, ServerCrawlingActivity.class);
                 startActivity(intent);
             }
         });
@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onDeleteAll(View v) {
-        customDialog = new CustomDialog(MainActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
+        customDialog = new CustomDialog(ScanAdvertisementActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
         customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
             @Override
             public void cancelClicked() {
@@ -263,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onDeleteLatest(View v) {
-        customDialog = new CustomDialog(MainActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
+        customDialog = new CustomDialog(ScanAdvertisementActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
         customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
             @Override
             public void cancelClicked() {
@@ -354,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
                 br.close();
                 fr.close();
 
-                customDialog = new CustomDialog(MainActivity.this,
+                customDialog = new CustomDialog(ScanAdvertisementActivity.this,
                         "저장된 데이터를 서버에 전송하시겠습니까?",
                         "취소",
                         "전송");
@@ -366,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void acceptClicked() {
-                        if (NetworkManager.getConnectivityStatus(MainActivity.this) != NetworkManager.NOT_CONNECTED) {
+                        if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                             try {
                                 FileReader fr = new FileReader(file.getAbsoluteFile());
                                 BufferedReader br = new BufferedReader(fr);
@@ -469,7 +469,7 @@ public class MainActivity extends AppCompatActivity {
                 switch_directly_send = findViewById(R.id.Switch_directly_send);
 
                 if (switch_directly_send.isChecked() == true) {
-                    if (NetworkManager.getConnectivityStatus(MainActivity.this) != NetworkManager.NOT_CONNECTED) {
+                    if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                         try {
                             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
                             if (!file.exists()) {
