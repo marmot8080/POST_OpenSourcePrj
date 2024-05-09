@@ -59,7 +59,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
     private ToggleButton toggle_btn_scan;
     private ImageButton btn_refresh;
-    private Button btn_delete_all, btn_delete_latest_value, btn_view_sensing_data;
+    private Button btn_delete_all, btn_delete_latest_value;
     private TextView tv_data, text_1jo_data, text_2jo_data, text_3jo_data, text_4jo_data, text_5jo_data;
     private Switch switch_directly_send;
     private Toast toast;
@@ -167,15 +167,6 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                 .build();
 
         service = retrofit.create(comm_data.class);
-
-        btn_view_sensing_data = findViewById(R.id.Btn_view_sensing_data);
-        btn_view_sensing_data.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ScanAdvertisementActivity.this, WebViewActivity.class);
-                startActivity(intent);
-            }
-        });
 
         btn_refresh = findViewById(R.id.Btn_refresh);
         btn_refresh.setOnClickListener(new View.OnClickListener() {
