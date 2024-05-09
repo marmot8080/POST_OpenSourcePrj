@@ -172,7 +172,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         btn_view_sensing_data.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(ScanAdvertisementActivity.this, ServerCrawlingActivity.class);
+                Intent intent = new Intent(ScanAdvertisementActivity.this, WebViewActivity.class);
                 startActivity(intent);
             }
         });

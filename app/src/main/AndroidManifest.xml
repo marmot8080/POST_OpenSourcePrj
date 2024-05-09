@@ -39,11 +39,8 @@
             android:exported="true">
         </activity>
         <activity
-            android:name=".ServerCrawlingActivity"
+            android:name=".WebViewActivity"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.CRAWLING" />
-            </intent-filter>
         </activity>
     </application>
 

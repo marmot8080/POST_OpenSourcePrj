@@ -9,7 +9,7 @@ import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class ServerCrawlingActivity extends AppCompatActivity {
+public class WebViewActivity extends AppCompatActivity {
     private Button btn_back;
     private WebView web_data;
 
@@ -18,7 +18,7 @@ public class ServerCrawlingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_server_crawling);
+        setContentView(R.layout.activity_web_view);
 
         btn_back = findViewById(R.id.Btn_back);
         btn_back.setOnClickListener(new View.OnClickListener() {
