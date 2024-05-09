@@ -58,7 +58,6 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private ImageButton btn_refresh;
     private Button btn_delete_all, btn_delete_latest_value;
     private TextView tv_data, text_1jo_data, text_2jo_data, text_3jo_data, text_4jo_data, text_5jo_data;
     private Switch switch_directly_send;
@@ -167,14 +166,6 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                 .build();
 
         service = retrofit.create(comm_data.class);
-
-        btn_refresh = findViewById(R.id.Btn_refresh);
-        btn_refresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new NetworkTask().execute();
-            }
-        });
 
         // 버튼이 invisible하게 기본 설정
         btn_delete_all = findViewById(R.id.Btn_delete_all);
