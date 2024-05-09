@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     private static final List<String> raspberryPiAddrList_5 = new ArrayList<>(Arrays.asList(raspberryPiAddr_5));
     private static final List<String> raspberryPiAddrList_ta = new ArrayList<>(Arrays.asList(raspberryPiAddr_ta));
     private static final int PERMISSION_REQUEST_CODE = 1000;
+    private static final int REQUEST_ENABLE_BLUETOOTH = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,14 +125,10 @@ public class MainActivity extends AppCompatActivity {
             toast.show();
         }
 
-        // 블루투스 기능 비활성화 시 팝업 메시지 생성
+        // 블루투스 기능 비활성화 시 기능 활성화
         if (!blead.isEnabled()) {
-            customDialog = new CustomDialog(MainActivity.this,
-                    "블루투스 기능이 꺼져있습니다.\n블루투스 기능을 활성화 해주십시오.",
-                    "취소",
-                    "확인");
-
-            customDialog.show();
+            Intent enableBluetoothIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBluetoothIntent, REQUEST_ENABLE_BLUETOOTH);
         }
 
         try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
@@ -651,6 +648,7 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.ACCESS_COARSE_LOCATION,
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.BLUETOOTH_SCAN,
+                Manifest.permission.BLUETOOTH_CONNECT,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.MANAGE_EXTERNAL_STORAGE
