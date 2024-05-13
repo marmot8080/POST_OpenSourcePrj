@@ -13,11 +13,13 @@ public class ConnectedThread extends Thread{
     private final BluetoothSocket mmSocket;
     private final InputStream mmInStream;
     private final OutputStream mmOutStream;
+    private static String connectedDeviceAddr;
 
     public ConnectedThread(BluetoothSocket socket) {
         mmSocket = socket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
+        connectedDeviceAddr = socket.getRemoteDevice().getAddress();
 
         try {
             tmpIn = socket.getInputStream();
@@ -69,5 +71,9 @@ public class ConnectedThread extends Thread{
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getConnectedDeviceAddr() {
+        return connectedDeviceAddr;
     }
 }

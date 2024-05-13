@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -15,6 +16,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -27,7 +31,8 @@ public class PairDeviceActivity extends AppCompatActivity {
 
     private BluetoothAdapter blead;
     private BluetoothSocket btSocket = null;
-    private ConnectedThread connectedThread;
+    private ConnectedThread connectedThread = null;
+    private CustomDialog customDialog;
 
     private Set<BluetoothDevice> pairedDevices;
     private ArrayAdapter<String> btArrayAdapter;
@@ -41,6 +46,8 @@ public class PairDeviceActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pair_device);
+
+        blead = BluetoothAdapter.getDefaultAdapter();
 
         text_view_status = findViewById(R.id.Text_view_status);
         list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
@@ -95,27 +102,68 @@ public class PairDeviceActivity extends AppCompatActivity {
             final String address = deviceAddressArray.get(position);
             boolean flag = true;
 
-            BluetoothDevice device = blead.getRemoteDevice(address);
+            if(connectedThread == null) {
+                BluetoothDevice device = blead.getRemoteDevice(address);
 
-            try {
-                btSocket = createBluetoothSocket(device);
-            } catch (IOException e) {
-                text_view_status.setText("connection failed!");
-                e.printStackTrace();
-            }
-
-            try {
-                btSocket.connect();
-            } catch (IOException e) {
                 try {
-                    btSocket.close();
-                } catch (IOException ex) {
-                    Log.e(TAG, "unable to close() socket during connection failure", ex);
+                    btSocket = createBluetoothSocket(device);
+                } catch (IOException e) {
+                    text_view_status.setText("connection failed!");
+                    e.printStackTrace();
                 }
+
+                try {
+                    btSocket.connect();
+                } catch (IOException e) {
+                    try {
+                        btSocket.close();
+                    } catch (IOException ex) {
+                        Log.e(TAG, "unable to close() socket during connection failure", ex);
+                    }
+                }
+                connectedThread = new ConnectedThread(btSocket);
+                text_view_status.setText("connected to" + name);
+                connectedThread.start();
+            } else if (address.equals(connectedThread.getConnectedDeviceAddr())) {
+                Toast.makeText(PairDeviceActivity.this, "Already Connected", Toast.LENGTH_SHORT).show();
+            } else {
+                customDialog = new CustomDialog(PairDeviceActivity.this, "현재 기기와의 연결을 끊고 새 기기와 연결하시겠습니까?", "취소", "연결");
+                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                    @Override
+                    public void cancelClicked() {
+
+                    }
+
+                    @Override
+                    public void acceptClicked() {
+                        connectedThread.stop();
+
+                        BluetoothDevice device = blead.getRemoteDevice(address);
+
+                        try {
+                            btSocket = createBluetoothSocket(device);
+                        } catch (IOException e) {
+                            text_view_status.setText("connection failed!");
+                            e.printStackTrace();
+                        }
+
+                        try {
+                            btSocket.connect();
+                        } catch (IOException e) {
+                            try {
+                                btSocket.close();
+                            } catch (IOException ex) {
+                                Log.e(TAG, "unable to close() socket during connection failure", ex);
+                            }
+                        }
+                        connectedThread = new ConnectedThread(btSocket);
+                        text_view_status.setText("connected to" + name);
+                        connectedThread.start();
+                    }
+                });
+
+                customDialog.show();
             }
-            connectedThread = new ConnectedThread(btSocket);
-            text_view_status.setText("connected to" + name);
-            connectedThread.start();
         }
     }
 
