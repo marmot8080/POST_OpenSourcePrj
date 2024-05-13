@@ -2,7 +2,6 @@ package com.example.opensourceprj;
 
 import android.bluetooth.BluetoothSocket;
 import android.os.SystemClock;
-import android.system.SystemCleaner;
 import android.util.Log;
 
 import java.io.IOException;
