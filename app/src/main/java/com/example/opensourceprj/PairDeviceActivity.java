@@ -4,7 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,18 +15,57 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 public class PairDeviceActivity extends AppCompatActivity {
     private final String TAG = "PairDeviceActivity";
-    private final UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FC");
+    private final UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    private static final String[] raspberryPiAddr_1 = {
+            "D8:3A:DD:42:AC:7F",
+            "D8:3A:DD:42:AC:64",
+            "B8:27:EB:DA:F2:5B",
+            "B8:27:EB:0C:F3:83"
+    }; // 1조 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_2 = {
+            "D8:3A:DD:79:8F:97",
+            "D8:3A:DD:79:8F:B9",
+            "D8:3A:DD:79:8F:54",
+            "D8:3A:DD:79:8F:80"
+    }; // 2조 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_3 = {
+            "D8:3A:DD:79:8E:D9",
+            "D8:3A:DD:42:AC:9A",
+            "D8:3A:DD:42:AB:FB",
+            "D8:3A:DD:79:8E:9B"
+    }; // 3조 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_4 = {
+            "D8:3A:DD:78:A7:1A",
+            "D8:3A:DD:79:8E:BF",
+            "D8:3A:DD:79:8E:92",
+            "D8:3A:DD:79:8F:59"
+    }; // 4조 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_5 = {
+            "B8:27:EB:47:8D:50",
+            "B8:27:EB:D3:40:06",
+            "B8:27:EB:E4:D0:FC",
+            "B8:27:EB:57:71:7D"
+    }; // 5조 라즈베리파이 Mac address
+
+    private static final String[] raspberryPiAddr_ta = {
+            "B8:27:EB:7F:E7:58"
+    }; // ta 라즈베리파이 Mac address
+    private static final List<String> raspberryPiAddrList_1 = new ArrayList<>(Arrays.asList(raspberryPiAddr_1));
+    private static final List<String> raspberryPiAddrList_2 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2));
+    private static final List<String> raspberryPiAddrList_3 = new ArrayList<>(Arrays.asList(raspberryPiAddr_3));
+    private static final List<String> raspberryPiAddrList_4 = new ArrayList<>(Arrays.asList(raspberryPiAddr_4));
+    private static final List<String> raspberryPiAddrList_5 = new ArrayList<>(Arrays.asList(raspberryPiAddr_5));
+    private static final List<String> raspberryPiAddrList_ta = new ArrayList<>(Arrays.asList(raspberryPiAddr_ta));
 
     private BluetoothAdapter blead;
     private BluetoothSocket btSocket = null;
@@ -71,19 +109,26 @@ public class PairDeviceActivity extends AppCompatActivity {
         btArrayAdapter.clear();
         if(deviceAddressArray != null && !deviceAddressArray.isEmpty()) deviceAddressArray.clear();
 
+        if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) text_view_status.setText("");
+
         pairedDevices = blead.getBondedDevices();
         if(pairedDevices.size() > 0) {
             for(BluetoothDevice device: pairedDevices) {
                 String deviceName = device.getName();
                 String deviceMacAddr = device.getAddress();
-                btArrayAdapter.add(deviceName);
-                deviceAddressArray.add(deviceMacAddr);
+
+                if(checkRaspPiAddr(deviceMacAddr) != null) {
+                    btArrayAdapter.add(deviceName);
+                    deviceAddressArray.add(deviceMacAddr);
+                }
             }
         }
     }
 
     public void onClickButtonSend(View view) {
-        if(connectedThread != null) connectedThread.write("connected");
+        if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) text_view_status.setText("");
+
+        if(connectedThread != null && connectedThread.getConnectedDeviceAddr() != null) connectedThread.write("connected");
     }
 
     @Override
@@ -102,7 +147,7 @@ public class PairDeviceActivity extends AppCompatActivity {
             final String address = deviceAddressArray.get(position);
             boolean flag = true;
 
-            if(connectedThread == null) {
+            if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) {
                 BluetoothDevice device = blead.getRemoteDevice(address);
 
                 try {
@@ -114,16 +159,20 @@ public class PairDeviceActivity extends AppCompatActivity {
 
                 try {
                     btSocket.connect();
+
+                    connectedThread = new ConnectedThread(btSocket);
+                    text_view_status.setText("connected to " + name);
+                    connectedThread.start();
                 } catch (IOException e) {
                     try {
+                        e.printStackTrace();
+                        Toast.makeText(PairDeviceActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
+                        text_view_status.setText("connection failed!");
                         btSocket.close();
                     } catch (IOException ex) {
                         Log.e(TAG, "unable to close() socket during connection failure", ex);
                     }
                 }
-                connectedThread = new ConnectedThread(btSocket);
-                text_view_status.setText("connected to" + name);
-                connectedThread.start();
             } else if (address.equals(connectedThread.getConnectedDeviceAddr())) {
                 Toast.makeText(PairDeviceActivity.this, "Already Connected", Toast.LENGTH_SHORT).show();
             } else {
@@ -137,6 +186,7 @@ public class PairDeviceActivity extends AppCompatActivity {
                     @Override
                     public void acceptClicked() {
                         connectedThread.stop();
+                        connectedThread.cancel();
 
                         BluetoothDevice device = blead.getRemoteDevice(address);
 
@@ -149,16 +199,19 @@ public class PairDeviceActivity extends AppCompatActivity {
 
                         try {
                             btSocket.connect();
+
+                            connectedThread = new ConnectedThread(btSocket);
+                            text_view_status.setText("connected to" + name);
+                            connectedThread.start();
                         } catch (IOException e) {
                             try {
+                                Toast.makeText(PairDeviceActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
+                                text_view_status.setText("connection failed!");
                                 btSocket.close();
                             } catch (IOException ex) {
                                 Log.e(TAG, "unable to close() socket during connection failure", ex);
                             }
                         }
-                        connectedThread = new ConnectedThread(btSocket);
-                        text_view_status.setText("connected to" + name);
-                        connectedThread.start();
                     }
                 });
 
@@ -176,5 +229,18 @@ public class PairDeviceActivity extends AppCompatActivity {
         }
 
         return device.createInsecureRfcommSocketToServiceRecord(BT_MODULE_UUID);
+    }
+
+    private String checkRaspPiAddr(String raspPiAddr) {
+        String sensorTeam = null;
+
+        if(raspberryPiAddrList_1.contains(raspPiAddr)) sensorTeam = "1jo";
+        else if(raspberryPiAddrList_2.contains(raspPiAddr)) sensorTeam = "2jo";
+        else if(raspberryPiAddrList_3.contains(raspPiAddr)) sensorTeam = "3jo";
+        else if(raspberryPiAddrList_4.contains(raspPiAddr)) sensorTeam = "4jo";
+        else if(raspberryPiAddrList_5.contains(raspPiAddr)) sensorTeam = "5jo";
+        else if(raspberryPiAddrList_ta.contains(raspPiAddr)) sensorTeam = "ta";
+
+        return sensorTeam;
     }
 }
