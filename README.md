@@ -26,9 +26,11 @@ git clone https://github.com/marmot8080/POST_OpenSourcePrj.git
 * 안드로이드 폰에서 애플리케이션 > 특별한 접근 > 모든 파일에 대한 접근 > OpenSourcePrj 허용 해줘야 사용 가능
 
 ## 기여자
-- marmot8080 (marmot8080@gmail.com)
-- Taeho24 ()
-- Bakhyoungwoo ()
+| 기여자         | 연락처                  |
+|-------------|----------------------|
+| marmot8080  | marmot8080@gmail.com |
+| Taeho24 | @gmail.com           |
+| Bakhyoungwoo | @gmail.com           |
 
 ## 버전 정보
 | 버전   | 주요 기능 및 변경 사항                   |
