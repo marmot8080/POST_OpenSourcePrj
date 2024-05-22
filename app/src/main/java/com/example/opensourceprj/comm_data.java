@@ -18,18 +18,4 @@ public interface comm_data {
             @Field("time") long time,
             @Field("otp") int otp,
             @Field("data") String data);
-
-    @POST("dustsensor/commtest_json/")
-    Call<postdata> post_json(
-            @Body postdata pd
-    );
-
-    @GET("dustsensor/commtest_get/")
-    Call<String> get(
-            @Query("sensor") String user,
-            @Query("mac") String mac,
-            @Query("receiver") String receiver,
-            @Query("time") long time,
-            @Query("otp") int otp,
-            @Query("data") String data);
 }
