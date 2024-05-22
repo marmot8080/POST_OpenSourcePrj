@@ -1,13 +1,9 @@
 package com.example.opensourceprj;
 
 public class BLEdata_storage {
-    private String sensorTeam;
-    private String macAddr;
-    private long time;
-    private int otp;
-    private String pmData;
+    private String sensorTeam, macAddr, time, otp, pmData;
 
-    BLEdata_storage(String sensorTeam, String macAddr, long time, int otp, String pmData){
+    BLEdata_storage(String sensorTeam, String macAddr, String time, String otp, String pmData){
         this.sensorTeam = sensorTeam;
         this.macAddr = macAddr;
         this.time = time;
@@ -19,13 +15,13 @@ public class BLEdata_storage {
 
     public String get_mac_addr() {return macAddr;}
 
-    public int get_otp(){
+    public String get_otp(){
         return otp;
     }
 
     public String get_pm_data() {return pmData;}
 
-    public long get_time(){
+    public String get_time(){
         return time;
     }
 }

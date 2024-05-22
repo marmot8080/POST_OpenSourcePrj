@@ -260,9 +260,9 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         String[] data = line.split(",", 5);
                         String sensorTeam = data[0];
                         String macAddr = data[1];
-                        int OTP = Integer.valueOf(data[2]);
+                        String OTP = data[2];
                         String pmData = data[3];
-                        long sensingTime = Integer.valueOf(data[4]);
+                        String sensingTime = data[4];
 
                         datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
                     }
@@ -350,11 +350,11 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                     String[] data = line.split(",", 5);
                                     String sensorTeam = data[0];
                                     String macAddr = data[1];
-                                    int OTP = Integer.valueOf(data[2]);
+                                    String OTP = data[2];
                                     String pmData = data[3];
-                                    long sensingTime = Integer.valueOf(data[4]);
+                                    String sensingTime = data[4];
 
-                                    Call<String> call = service.post(sensorTeam, macAddr, receiver, sensingTime, OTP, pmData);
+                                    Call<String> call = service.post(sensorTeam, "advertising", macAddr, receiver, sensingTime, OTP, "key", pmData);
 
                                     call.enqueue(new Callback<String>() {
                                         @Override
@@ -434,7 +434,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
             if (sensorTeam != null) {
                 String hexData = byteArrayToHex(scanRecord);
-                int sensingTime = Integer.valueOf(extractSensingTime(hexData));
+                String sensingTime = String.valueOf(extractSensingTime(hexData));
                 String OTP = extractOTP(hexData);
                 String pmData = extractSensorData(hexData);
 
@@ -450,7 +450,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                             FileReader fr = new FileReader(file.getAbsoluteFile());
                             BufferedReader br = new BufferedReader(fr);
 
-                            Call<String> call = service.post(sensorTeam, MacAddr, receiver, sensingTime, Integer.valueOf(OTP), pmData);
+                            Call<String> call = service.post(sensorTeam, "advertising", MacAddr, receiver, sensingTime, OTP, "key", pmData);
 
                             call.enqueue(new Callback<String>() {
                                 @Override
@@ -484,7 +484,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         toast.show();
                     }
                 } else {
-                    BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, Integer.valueOf(OTP), pmData);
+                    BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, OTP, pmData);
                     datalist.add(data);
 
                     try {

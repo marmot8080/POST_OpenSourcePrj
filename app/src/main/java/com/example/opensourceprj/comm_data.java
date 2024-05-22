@@ -13,9 +13,12 @@ public interface comm_data {
     @POST("dustsensor/sensing/")
     Call<String> post(
             @Field("sensor") String user,
+            @Field("mode") String mode,
             @Field("mac") String mac,
             @Field("receiver") String receiver,
-            @Field("time") long time,
-            @Field("otp") int otp,
-            @Field("data") String data);
+            @Field("time") String time,
+            @Field("otp") String otp,
+            @Field("key") String key,
+            @Field("data") String data
+    );
 }
