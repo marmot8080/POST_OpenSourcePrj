@@ -61,8 +61,12 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private Switch switch_directly_send;
     private Toast toast;
 
-    private String id; // 핸드폰 고유 id
+    private String id;  // 핸드폰 고유 id
+    private static final String mode = "advertising";
+    private static final String TYPE_DUST_SENSOR = "dustsensor";
+    private static final String TYPE_AIR_SENSOR = "airquality";
     private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
+    private static final String FILE_NAME = "/advertisement.csv";
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",
             "D8:3A:DD:42:AC:64",
@@ -116,7 +120,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 
         try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
-            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
             if (!file.exists()) {
                 file.createNewFile();
             }
@@ -216,7 +220,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             @Override
             public void acceptClicked() {
                 try {
-                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
                     if (!file.exists()) {
                         file.createNewFile();
                     }
@@ -248,7 +252,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             @Override
             public void acceptClicked() {
                 try {
-                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
                     if (!file.exists()) {
                         file.createNewFile();
                     }
@@ -260,14 +264,15 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                     String line;
                     while ((line = br.readLine()) != null) {
-                        String[] data = line.split(",", 5);
-                        String sensorTeam = data[0];
-                        String macAddr = data[1];
-                        String OTP = data[2];
-                        String pmData = data[3];
-                        String sensingTime = data[4];
+                        String[] data = line.split(",", 6);
+                        String sensorType = data[0];
+                        String sensorTeam = data[1];
+                        String macAddr = data[2];
+                        String OTP = data[3];
+                        String pmData = data[4];
+                        String sensingTime = data[5];
 
-                        datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
+                        datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, pmData));
                     }
                     br.close();
                     fr.close();
@@ -276,7 +281,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                     BufferedWriter bw = new BufferedWriter(fw);
                     if (!datalist.isEmpty()) {
                         for (int i = 0; i < datalist.size() - 1; i++) {
-                            bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
+                            bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
+                            bw.write("," + String.valueOf(datalist.get(i).get_sensor_team()));
                             bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
                             bw.write("," + String.valueOf(datalist.get(i).get_otp()));
                             bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
@@ -311,7 +317,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
     public void onSendData(View v) {
         try {
-            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
             if (!file.exists()) {
                 file.createNewFile();
             }
@@ -350,14 +356,17 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                                 String line;
                                 while ((line = br.readLine()) != null) {
-                                    String[] data = line.split(",", 5);
-                                    String sensorTeam = data[0];
-                                    String macAddr = data[1];
-                                    String OTP = data[2];
-                                    String pmData = data[3];
-                                    String sensingTime = data[4];
+                                    String[] data = line.split(",", 6);
+                                    String sensorType = data[0];
+                                    String sensorTeam = data[1];
+                                    String macAddr = data[2];
+                                    String OTP = data[3];
+                                    String pmData = data[4];
+                                    String sensingTime = data[5];
 
-                                    Call<String> call = service.post(sensorTeam, "advertising", macAddr, id, sensingTime, OTP, "key", pmData);
+                                    Call<String> call;
+                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, "key", pmData);
+                                    else call = service.air_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, "key", pmData);
 
                                     call.enqueue(new Callback<String>() {
                                         @Override
@@ -368,7 +377,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                         @Override
                                         public void onFailure(Call<String> call, Throwable t) {
                                             // 서버 전송에 실패한 데이터들은 datalist에 저장
-                                            datalist.add(new BLEdata_storage(sensorTeam, macAddr, sensingTime, OTP, pmData));
+                                            datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, pmData));
                                             Log.d("ServerCommunicationFail", "failed to communicate with server", t);
                                         }
                                     });
@@ -383,7 +392,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                 // 서버 전송에 실패한 datalist를 csv파일에 다시 저장
                                 if (!datalist.isEmpty()) {
                                     for (int i = 0; i < datalist.size(); i++) {
-                                        bw.write(String.valueOf(datalist.get(i).get_sensor_team()));
+                                        bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
+                                        bw.write("," + String.valueOf(datalist.get(i).get_sensor_team()));
                                         bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
                                         bw.write("," + String.valueOf(datalist.get(i).get_otp()));
                                         bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
@@ -434,26 +444,31 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             String MacAddr = device.getAddress();
             String sensorTeam = checkRaspPiAddr(MacAddr);
+            String sensorType = getSensorType(scanRecord);
 
-            if (sensorTeam != null) {
+            if (sensorTeam != null && sensorType != null) {
                 String hexData = byteArrayToHex(scanRecord);
                 String sensingTime = String.valueOf(extractSensingTime(hexData));
                 String OTP = extractOTP(hexData);
-                String pmData = extractSensorData(hexData);
+                String sensorData;
+                if(sensorType.equals(TYPE_DUST_SENSOR)) sensorData = extractDustSensorData(hexData);
+                else sensorData = extractAirSensorData(hexData);
 
                 switch_directly_send = findViewById(R.id.Switch_directly_send);
 
                 if (switch_directly_send.isChecked() == true) {
                     if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                         try {
-                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
                             if (!file.exists()) {
                                 file.createNewFile();
                             }
                             FileReader fr = new FileReader(file.getAbsoluteFile());
                             BufferedReader br = new BufferedReader(fr);
 
-                            Call<String> call = service.post(sensorTeam, "advertising", MacAddr, id, sensingTime, OTP, "key", pmData);
+                            Call<String> call;
+                            if(sensorType == TYPE_DUST_SENSOR) call = service.dust_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, "key", sensorData);
+                            else call = service.air_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, "key", sensorData);
 
                             call.enqueue(new Callback<String>() {
                                 @Override
@@ -487,11 +502,11 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         toast.show();
                     }
                 } else {
-                    BLEdata_storage data = new BLEdata_storage(sensorTeam, MacAddr, sensingTime, OTP, pmData);
+                    BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, MacAddr, sensingTime, OTP, sensorData);
                     datalist.add(data);
 
                     try {
-                        File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
+                        File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
                         if (!file.exists()) {
                             file.createNewFile();
                         }
@@ -499,7 +514,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
                         BufferedWriter bw = new BufferedWriter(fw);
 
-                        bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
+                        bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_type()));
+                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
                         bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_mac_addr()));
                         bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_otp()));
                         bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_pm_data()));
@@ -517,7 +533,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         tv_data = findViewById(R.id.Text_view_data);
                         tv_data.setText("");
                         String line;
-                        BufferedReader br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv"));
+                        BufferedReader br = new BufferedReader(new FileReader(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME));
                         while ((line = br.readLine()) != null) {
                             tv_data.setText(tv_data.getText() + line + "\n");
                         }
@@ -541,6 +557,16 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             sb.append(String.format("%x ", b)); // 각 바이트를 16진수 문자열로 변환하여 추가
         }
         return sb.toString();
+    }
+
+    private String getSensorType(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%s", b));
+        }
+        if(sb.toString().contains(TYPE_DUST_SENSOR)) return TYPE_DUST_SENSOR;
+        else if(sb.toString().contains(TYPE_AIR_SENSOR)) return TYPE_AIR_SENSOR;
+        else return null;
     }
 
     private String extractOTP(String hexData) {
@@ -584,7 +610,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         return sensingTime;
     }
 
-    private String extractSensorData(String hexData) {
+    private String extractDustSensorData(String hexData) {
         String sensorData = null;
         StringBuilder sb = new StringBuilder();
         String regExp = "fd ([0-9a-fA-F]+) ([0-9a-fA-F]+) ([0-9a-fA-F]+)"; // sensor data 추출 정규표현식
@@ -598,6 +624,23 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             sb.append(Integer.parseInt(matcher.group(2), 16));
             sb.append('/');
             sb.append(Integer.parseInt(matcher.group(3), 16));
+            sensorData = sb.toString(); // 매칭된 문자열을 추출하여 반환
+        }
+
+        return sensorData;
+    }
+
+    private String extractAirSensorData(String hexData) {
+        String sensorData = null;
+        StringBuilder sb = new StringBuilder();
+        String regExp = "fd ([0-9a-fA-F]+) ([0-9a-fA-F]+)"; // sensor data 추출 정규표현식
+
+        Pattern pattern = Pattern.compile(regExp);
+        Matcher matcher = pattern.matcher(hexData);
+
+        if (matcher.find()) {
+            sb.append(Integer.parseInt(matcher.group(1), 16));
+            sb.append(Integer.parseInt(matcher.group(2), 16));
             sensorData = sb.toString(); // 매칭된 문자열을 추출하여 반환
         }
 
