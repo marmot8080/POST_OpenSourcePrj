@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -60,7 +61,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private Switch switch_directly_send;
     private Toast toast;
 
-    private static final String receiver = "2jo"; // 팀명
+    private String id; // 핸드폰 고유 id
     private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",
@@ -111,6 +112,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
         toast = Toast.makeText(ScanAdvertisementActivity.this, null, Toast.LENGTH_SHORT);
+
+        id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 
         try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/store_test.csv");
@@ -354,7 +357,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                     String pmData = data[3];
                                     String sensingTime = data[4];
 
-                                    Call<String> call = service.post(sensorTeam, "advertising", macAddr, receiver, sensingTime, OTP, "key", pmData);
+                                    Call<String> call = service.post(sensorTeam, "advertising", macAddr, id, sensingTime, OTP, "key", pmData);
 
                                     call.enqueue(new Callback<String>() {
                                         @Override
@@ -450,7 +453,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                             FileReader fr = new FileReader(file.getAbsoluteFile());
                             BufferedReader br = new BufferedReader(fr);
 
-                            Call<String> call = service.post(sensorTeam, "advertising", MacAddr, receiver, sensingTime, OTP, "key", pmData);
+                            Call<String> call = service.post(sensorTeam, "advertising", MacAddr, id, sensingTime, OTP, "key", pmData);
 
                             call.enqueue(new Callback<String>() {
                                 @Override
