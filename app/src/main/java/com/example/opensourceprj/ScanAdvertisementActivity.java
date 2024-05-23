@@ -6,7 +6,12 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -52,6 +57,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private Retrofit retrofit;
     private comm_data service;
     private BluetoothAdapter blead;
+    private WifiManager wifiManager;
     private CustomDialog customDialog;
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
@@ -62,6 +68,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private Toast toast;
 
     private String id;  // 핸드폰 고유 id
+    private String location = "";    // 현재 위치
     private static final String mode = "advertising";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
@@ -264,15 +271,16 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                     String line;
                     while ((line = br.readLine()) != null) {
-                        String[] data = line.split(",", 6);
+                        String[] data = line.split(",", 7);
                         String sensorType = data[0];
                         String sensorTeam = data[1];
                         String macAddr = data[2];
                         String OTP = data[3];
-                        String pmData = data[4];
-                        String sensingTime = data[5];
+                        String key = data[4];
+                        String sensorData = data[5];
+                        String sensingTime = data[6];
 
-                        datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, pmData));
+                        datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, key, sensorData));
                     }
                     br.close();
                     fr.close();
@@ -282,11 +290,12 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                     if (!datalist.isEmpty()) {
                         for (int i = 0; i < datalist.size() - 1; i++) {
                             bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
-                            bw.write("," + String.valueOf(datalist.get(i).get_sensor_team()));
-                            bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
-                            bw.write("," + String.valueOf(datalist.get(i).get_otp()));
-                            bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
-                            bw.write("," + String.valueOf(datalist.get(i).get_time()));
+                            bw.write("," + datalist.get(i).get_sensor_team());
+                            bw.write("," + datalist.get(i).get_mac_addr());
+                            bw.write("," + datalist.get(i).get_otp());
+                            bw.write("," + datalist.get(i).get_key());
+                            bw.write("," + datalist.get(i).get_sensor_data());
+                            bw.write("," + datalist.get(i).get_time());
 
                             bw.newLine();
                         }
@@ -356,17 +365,18 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                                 String line;
                                 while ((line = br.readLine()) != null) {
-                                    String[] data = line.split(",", 6);
+                                    String[] data = line.split(",", 7);
                                     String sensorType = data[0];
                                     String sensorTeam = data[1];
                                     String macAddr = data[2];
                                     String OTP = data[3];
-                                    String pmData = data[4];
-                                    String sensingTime = data[5];
+                                    String key = data[4];
+                                    String sensorData = data[5];
+                                    String sensingTime = data[6];
 
                                     Call<String> call;
-                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, "key", pmData);
-                                    else call = service.air_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, "key", pmData);
+                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, key, sensorData);
+                                    else call = service.air_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, key, sensorData);
 
                                     call.enqueue(new Callback<String>() {
                                         @Override
@@ -377,7 +387,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                         @Override
                                         public void onFailure(Call<String> call, Throwable t) {
                                             // 서버 전송에 실패한 데이터들은 datalist에 저장
-                                            datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, pmData));
+                                            datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, key, sensorData));
                                             Log.d("ServerCommunicationFail", "failed to communicate with server", t);
                                         }
                                     });
@@ -393,11 +403,12 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                 if (!datalist.isEmpty()) {
                                     for (int i = 0; i < datalist.size(); i++) {
                                         bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
-                                        bw.write("," + String.valueOf(datalist.get(i).get_sensor_team()));
-                                        bw.write("," + String.valueOf(datalist.get(i).get_mac_addr()));
-                                        bw.write("," + String.valueOf(datalist.get(i).get_otp()));
-                                        bw.write("," + String.valueOf(datalist.get(i).get_pm_data()));
-                                        bw.write("," + String.valueOf(datalist.get(i).get_time()));
+                                        bw.write("," + datalist.get(i).get_sensor_team());
+                                        bw.write("," + datalist.get(i).get_mac_addr());
+                                        bw.write("," + datalist.get(i).get_otp());
+                                        bw.write("," + datalist.get(i).get_key());
+                                        bw.write("," + datalist.get(i).get_sensor_data());
+                                        bw.write("," + datalist.get(i).get_time());
 
                                         bw.newLine();
                                     }
@@ -467,8 +478,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                             BufferedReader br = new BufferedReader(fr);
 
                             Call<String> call;
-                            if(sensorType == TYPE_DUST_SENSOR) call = service.dust_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, "key", sensorData);
-                            else call = service.air_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, "key", sensorData);
+                            if(sensorType == TYPE_DUST_SENSOR) call = service.dust_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, location, sensorData);
+                            else call = service.air_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, location, sensorData);
 
                             call.enqueue(new Callback<String>() {
                                 @Override
@@ -502,7 +513,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         toast.show();
                     }
                 } else {
-                    BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, MacAddr, sensingTime, OTP, sensorData);
+                    BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, MacAddr, sensingTime, OTP, "key", sensorData);
                     datalist.add(data);
 
                     try {
@@ -515,11 +526,12 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         BufferedWriter bw = new BufferedWriter(fw);
 
                         bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_type()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_mac_addr()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_otp()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_pm_data()));
-                        bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_time()));
+                        bw.write("," + datalist.get(datalist.size() - 1).get_sensor_team());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_mac_addr());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_otp());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_key());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_sensor_data());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_time());
 
                         bw.newLine();
 
