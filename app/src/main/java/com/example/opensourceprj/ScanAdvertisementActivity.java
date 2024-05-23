@@ -178,6 +178,31 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         });
     }
 
+    public void onLocation(View v) {
+        String wifiData = NetworkManager.getWifiData(ScanAdvertisementActivity.this);
+        tv_data = findViewById(R.id.Text_view_data);
+        
+        if(wifiData != null) {
+            comm_data service = retrofit.create(comm_data.class);
+
+            Call<String> call = null;
+            call = service.location(wifiData);
+
+            call.enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(Call<String> call, Response<String> response) {
+                    tv_data.setText(response.body().toString());
+                }
+
+                @Override
+                public void onFailure(Call<String> call, Throwable t) {
+
+                }
+            });
+        }
+        else tv_data.setText("스캔 실패");
+    }
+
     public void onToggleScan(View v) {
         boolean on = ((ToggleButton) v).isChecked();
 

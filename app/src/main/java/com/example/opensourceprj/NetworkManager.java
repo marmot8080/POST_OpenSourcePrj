@@ -28,11 +28,21 @@ public class NetworkManager {
         } return NOT_CONNECTED;
     }
 
-    public List<ScanResult> getScanResults(Context context) {
+    public static String getWifiData(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
 
-        wifiManager.startScan();
+        if(wifiManager.startScan()) {
+            List<ScanResult> scanResults = wifiManager.getScanResults();
 
-        return wifiManager.getScanResults();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < scanResults.size(); i++) {
+                int RSSI = scanResults.get(i).level;
+                String BSSID = scanResults.get(i).BSSID;
+                sb.append(BSSID + "!" + String.valueOf(RSSI) + "/");
+            }
+
+            return sb.toString();
+        }
+        else return null;
     }
 }
