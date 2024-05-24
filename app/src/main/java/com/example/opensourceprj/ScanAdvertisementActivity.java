@@ -63,6 +63,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
     private String androidID;  // 핸드폰 고유 id
     private String location = null; // 현재 위치
+    private String recentSensingTime = null;
     private static final String mode = "advertising";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
@@ -480,14 +481,16 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             String sensorTeam = checkRaspPiAddr(MacAddr);
             String sensorType = getSensorType(scanRecord);
 
-            if (sensorTeam != null && sensorType != null) {
-                String hexData = byteArrayToHex(scanRecord);
-                String sensingTime = String.valueOf(extractSensingTime(hexData));
-                String OTP = extractOTP(hexData);
-                String sensorData;
-                if(sensorType.equals(TYPE_DUST_SENSOR)) sensorData = extractDustSensorData(hexData);
-                else sensorData = extractAirSensorData(hexData);
-                getLocation(); // location 값 획득
+            String hexData = byteArrayToHex(scanRecord);
+            String sensingTime = String.valueOf(extractSensingTime(hexData));
+            String OTP = extractOTP(hexData);
+            String sensorData;
+            if(sensorType.equals(TYPE_DUST_SENSOR)) sensorData = extractDustSensorData(hexData);
+            else sensorData = extractAirSensorData(hexData);
+            getLocation(); // location 값 획득
+
+            if (sensorTeam != null && sensorType != null && !sensingTime.equals(recentSensingTime)) {
+                recentSensingTime = sensingTime;
 
                 switch_directly_send = findViewById(R.id.Switch_directly_send);
 
