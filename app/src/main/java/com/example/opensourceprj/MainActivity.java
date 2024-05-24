@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private void checkAndRequestPermissions() {
         // 필요 권한 확인
         String[] permissions = {
+                android.Manifest.permission.CHANGE_WIFI_STATE,
                 android.Manifest.permission.ACCESS_NETWORK_STATE,
                 android.Manifest.permission.ACCESS_WIFI_STATE,
                 android.Manifest.permission.ACCESS_COARSE_LOCATION,
