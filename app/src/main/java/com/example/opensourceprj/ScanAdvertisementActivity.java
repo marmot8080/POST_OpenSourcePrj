@@ -54,6 +54,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private BluetoothAdapter blead;
     private CustomDialog customDialog;
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
+    private static ArrayList<BLEdata_storage> messageQueue = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
     private Button btn_delete_all, btn_delete_latest_value, btn_back;
@@ -210,6 +211,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             }
 
             if (blead.isEnabled()) {
+                messageQueue = new ArrayList<>();
                 // bluetooth 스캔 시작
                 blead.startLeScan(scancallback_le);
             } else {
@@ -218,6 +220,12 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                 ((ToggleButton) v).setChecked(false);
             }
         } else {
+            // directly send 종료 시, TextView의 message queue 내용 삭제
+            switch_directly_send = findViewById(R.id.Switch_directly_send);
+            if(switch_directly_send.isChecked() == true) {
+                tv_data = findViewById(R.id.Text_view_data);
+                tv_data.setText("");
+            }
             blead.stopLeScan(scancallback_le);
         }
     }
@@ -487,14 +495,14 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             String sensorData;
             if(sensorType.equals(TYPE_DUST_SENSOR)) sensorData = extractDustSensorData(hexData);
             else sensorData = extractAirSensorData(hexData);
-            getLocation(); // location 값 획득
+            getLocation(); // location 값 설정
 
-            if (sensorTeam != null && sensorType != null && !sensingTime.equals(recentSensingTime)) {
+            if (sensorTeam != null && sensorType != null && !sensingTime.equals(recentSensingTime) && location != null) {
                 recentSensingTime = sensingTime;
 
                 switch_directly_send = findViewById(R.id.Switch_directly_send);
 
-                if (switch_directly_send.isChecked() == true && location != null) {
+                if (switch_directly_send.isChecked() == true) {
                     if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                         try {
                             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
@@ -522,8 +530,25 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                             br.close();
                             fr.close();
 
-                            toast.setText(sensorTeam + ": " + sensingTime);
-                            toast.show();
+                            BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, mode, MacAddr, sensingTime, OTP, location, sensorData);
+                            messageQueue.add(data);
+
+                            tv_data = findViewById(R.id.Text_view_data);
+                            if(messageQueue.size() > 9) messageQueue.remove(0);
+
+                            String message = null;
+                            for(int i = 0; i < 10; i++){
+                                message = messageQueue.get(i).get_sensor_type()
+                                                + ", " + messageQueue.get(i).get_sensor_team()
+                                                + ", " + messageQueue.get(i).get_mode()
+                                                + ", " + messageQueue.get(i).get_mac_addr()
+                                                + ", " + messageQueue.get(i).get_time()
+                                                + ", " + messageQueue.get(i).get_otp()
+                                                + ", " + messageQueue.get(i).get_key()
+                                                + ", " + messageQueue.get(i).get_sensor_data()
+                                                + "\n";
+                            }
+                            tv_data.setText(message);
                         } catch (FileNotFoundException e) {
                             throw new RuntimeException(e);
                         } catch (IOException e) {
@@ -539,7 +564,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         toast.setText("NETWORK NOT CONNECTED");
                         toast.show();
                     }
-                } else if(location != null) {
+                } else {
                     BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, mode, MacAddr, sensingTime, OTP, location, sensorData);
                     datalist.add(data);
 
