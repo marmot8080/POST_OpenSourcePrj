@@ -4,6 +4,9 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,62 +15,44 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
+
 public class PairDeviceActivity extends AppCompatActivity {
     private final String TAG = "PairDeviceActivity";
+    private String androidID;  // 핸드폰 고유 id
+    private static final String TYPE_DUST_SENSOR = "dustsensor";
+    private static final String TYPE_AIR_SENSOR = "airquality";
     private final UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-    private static final String[] raspberryPiAddr_1 = {
-            "D8:3A:DD:42:AC:7F",
-            "D8:3A:DD:42:AC:64",
-            "B8:27:EB:DA:F2:5B",
-            "B8:27:EB:0C:F3:83"
-    }; // 1조 라즈베리파이 Mac address
-    private static final String[] raspberryPiAddr_2 = {
-            "D8:3A:DD:79:8F:97",
-            "D8:3A:DD:79:8F:B9",
-            "D8:3A:DD:79:8F:54",
-            "D8:3A:DD:79:8F:80"
-    }; // 2조 라즈베리파이 Mac address
-    private static final String[] raspberryPiAddr_3 = {
-            "D8:3A:DD:79:8E:D9",
-            "D8:3A:DD:42:AC:9A",
-            "D8:3A:DD:42:AB:FB",
-            "D8:3A:DD:79:8E:9B"
-    }; // 3조 라즈베리파이 Mac address
-    private static final String[] raspberryPiAddr_4 = {
-            "D8:3A:DD:78:A7:1A",
-            "D8:3A:DD:79:8E:BF",
-            "D8:3A:DD:79:8E:92",
-            "D8:3A:DD:79:8F:59"
-    }; // 4조 라즈베리파이 Mac address
-    private static final String[] raspberryPiAddr_5 = {
-            "B8:27:EB:47:8D:50",
-            "B8:27:EB:D3:40:06",
-            "B8:27:EB:E4:D0:FC",
-            "B8:27:EB:57:71:7D"
-    }; // 5조 라즈베리파이 Mac address
-
-    private static final String[] raspberryPiAddr_ta = {
-            "B8:27:EB:7F:E7:58"
-    }; // ta 라즈베리파이 Mac address
-    private static final List<String> raspberryPiAddrList_1 = new ArrayList<>(Arrays.asList(raspberryPiAddr_1));
-    private static final List<String> raspberryPiAddrList_2 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2));
-    private static final List<String> raspberryPiAddrList_3 = new ArrayList<>(Arrays.asList(raspberryPiAddr_3));
-    private static final List<String> raspberryPiAddrList_4 = new ArrayList<>(Arrays.asList(raspberryPiAddr_4));
-    private static final List<String> raspberryPiAddrList_5 = new ArrayList<>(Arrays.asList(raspberryPiAddr_5));
-    private static final List<String> raspberryPiAddrList_ta = new ArrayList<>(Arrays.asList(raspberryPiAddr_ta));
+    private static final String FILE_NAME = "/scan_data.csv";
 
     private BluetoothAdapter blead;
+    private Retrofit retrofit;
+    private comm_data service;
+    private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
     private BluetoothSocket btSocket = null;
     private ConnectedThread connectedThread = null;
     private CustomDialog customDialog;
@@ -76,7 +61,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     private ArrayAdapter<String> btArrayAdapter;
     private ArrayList<String> deviceAddressArray;
 
-    private TextView text_view_status;
+    private TextView text_view_status, text_view_data;
     private Button btn_back;
     private ListView list_view_paired_adapter;
 
@@ -85,7 +70,46 @@ public class PairDeviceActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pair_device);
 
+        try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            FileReader fr = new FileReader(file.getAbsoluteFile());
+            BufferedReader br = new BufferedReader(fr);
+
+            text_view_data = findViewById(R.id.Text_view_data);
+            text_view_data.setText("");
+            text_view_data.setMovementMethod(new ScrollingMovementMethod());
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                text_view_data.setText(text_view_data.getText() + line + "\n");
+            }
+
+            fr.close();
+            br.close();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        Gson gson = new GsonBuilder().setLenient().create();
+        retrofit = new Retrofit.Builder()
+                .baseUrl("http://203.255.81.72:10021/")
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        service = retrofit.create(comm_data.class);
+
+        list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
+        list_view_paired_adapter.setVisibility(View.GONE);
+
         blead = BluetoothAdapter.getDefaultAdapter();
+
+        androidID = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 
         text_view_status = findViewById(R.id.Text_view_status);
         list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
@@ -105,30 +129,158 @@ public class PairDeviceActivity extends AppCompatActivity {
         });
     }
 
-    public void onClickButtonPaired(View view) {
-        btArrayAdapter.clear();
-        if(deviceAddressArray != null && !deviceAddressArray.isEmpty()) deviceAddressArray.clear();
+    public void onTogglePaired(View v) {
+        boolean on = ((ToggleButton) v).isChecked();
 
-        if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) text_view_status.setText("");
+        if (on) {
+            list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
+            list_view_paired_adapter.setVisibility(View.VISIBLE);
 
-        pairedDevices = blead.getBondedDevices();
-        if(pairedDevices.size() > 0) {
-            for(BluetoothDevice device: pairedDevices) {
-                String deviceName = device.getName();
-                String deviceMacAddr = device.getAddress();
+            btArrayAdapter.clear();
+            if(deviceAddressArray != null && !deviceAddressArray.isEmpty()) deviceAddressArray.clear();
 
-                if(checkRaspPiAddr(deviceMacAddr) != null) {
-                    btArrayAdapter.add(deviceName);
-                    deviceAddressArray.add(deviceMacAddr);
+            if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) text_view_status.setText("");
+
+            pairedDevices = blead.getBondedDevices();
+            if(pairedDevices.size() > 0) {
+                for(BluetoothDevice device: pairedDevices) {
+                    String deviceMacAddr = device.getAddress();
+                    String deviceName = checkRaspPiAddr(deviceMacAddr);
+
+                    if(checkRaspPiAddr(deviceMacAddr) != null) {
+                        btArrayAdapter.add(deviceName);
+                        deviceAddressArray.add(deviceMacAddr);
+                    }
                 }
             }
+        } else {
+            list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
+            list_view_paired_adapter.setVisibility(View.GONE);
         }
     }
 
     public void onClickButtonSend(View view) {
-        if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) text_view_status.setText("");
+        try {
+            File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
 
-        if(connectedThread != null && connectedThread.getConnectedDeviceAddr() != null) connectedThread.write("connected");
+            FileReader fr = new FileReader(file.getAbsoluteFile());
+            BufferedReader br = new BufferedReader(fr);
+
+            // 파일이 비어있으면 토스트 메시지 출력
+            if (br.readLine() == "") {
+                br.close();
+                fr.close();
+                Toast.makeText(PairDeviceActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
+            } else {
+                br.close();
+                fr.close();
+
+                customDialog = new CustomDialog(PairDeviceActivity.this,
+                        "저장된 데이터를 서버에 전송하시겠습니까?",
+                        "취소",
+                        "전송");
+                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                    @Override
+                    public void cancelClicked() {
+
+                    }
+
+                    @Override
+                    public void acceptClicked() {
+                        if (NetworkManager.getConnectivityStatus(PairDeviceActivity.this) != NetworkManager.NOT_CONNECTED) {
+                            try {
+                                FileReader fr = new FileReader(file.getAbsoluteFile());
+                                BufferedReader br = new BufferedReader(fr);
+
+                                datalist = new ArrayList<>();
+
+                                String line;
+                                while ((line = br.readLine()) != null) {
+                                    String[] data = line.split(",", 8);
+                                    String sensorType = data[0];
+                                    String sensorTeam = data[1];
+                                    String collectMode = data[2];
+                                    String macAddr = data[3];
+                                    String OTP = data[4];
+                                    String key = data[5];
+                                    String sensorData = data[6];
+                                    String sensingTime = data[7];
+
+                                    Call<String> call;
+                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
+                                    else call = service.air_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
+
+                                    call.enqueue(new Callback<String>() {
+                                        @Override
+                                        public void onResponse(Call<String> call, Response<String> response) {
+                                            Log.d("ServerCommunicationSuccess", response.body().toString());
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<String> call, Throwable t) {
+                                            // 서버 전송에 실패한 데이터들은 datalist에 저장
+                                            datalist.add(new BLEdata_storage(sensorType, sensorTeam, collectMode, macAddr, sensingTime, OTP, key, sensorData));
+                                            Log.d("ServerCommunicationFail", "failed to communicate with server", t);
+                                        }
+                                    });
+
+                                    Thread.sleep(500);
+                                }
+
+                                FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                                BufferedWriter bw = new BufferedWriter(fw);
+
+                                bw.write("");
+                                // 서버 전송에 실패한 datalist를 csv파일에 다시 저장
+                                if (!datalist.isEmpty()) {
+                                    for (int i = 0; i < datalist.size(); i++) {
+                                        bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
+                                        bw.write("," + datalist.get(i).get_sensor_team());
+                                        bw.write("," + datalist.get(i).get_mode());
+                                        bw.write("," + datalist.get(i).get_mac_addr());
+                                        bw.write("," + datalist.get(i).get_otp());
+                                        bw.write("," + datalist.get(i).get_key());
+                                        bw.write("," + datalist.get(i).get_sensor_data());
+                                        bw.write("," + datalist.get(i).get_time());
+
+                                        bw.newLine();
+                                    }
+                                }
+
+                                text_view_data = findViewById(R.id.Text_view_data);
+                                text_view_data.setText("");
+                                br.close();
+                                br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+                                while ((line = br.readLine()) != null) {
+                                    text_view_data.setText(text_view_data.getText() + line + "\n");
+                                }
+
+                                bw.close();
+                                br.close();
+                                fw.close();
+                                fr.close();
+                            } catch (FileNotFoundException e) {
+                                throw new RuntimeException(e);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
+                        } else {
+                            Toast.makeText(PairDeviceActivity.this, "NETWORK NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+                customDialog.show();
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -145,7 +297,6 @@ public class PairDeviceActivity extends AppCompatActivity {
 
             final String name = btArrayAdapter.getItem(position);
             final String address = deviceAddressArray.get(position);
-            boolean flag = true;
 
             if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) {
                 BluetoothDevice device = blead.getRemoteDevice(address);
@@ -160,7 +311,7 @@ public class PairDeviceActivity extends AppCompatActivity {
                 try {
                     btSocket.connect();
 
-                    connectedThread = new ConnectedThread(btSocket);
+                    connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, btSocket);
                     text_view_status.setText("connected to " + name);
                     connectedThread.start();
                 } catch (IOException e) {
@@ -200,7 +351,7 @@ public class PairDeviceActivity extends AppCompatActivity {
                         try {
                             btSocket.connect();
 
-                            connectedThread = new ConnectedThread(btSocket);
+                            connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, btSocket);
                             text_view_status.setText("connected to" + name);
                             connectedThread.start();
                         } catch (IOException e) {
@@ -231,16 +382,43 @@ public class PairDeviceActivity extends AppCompatActivity {
         return device.createInsecureRfcommSocketToServiceRecord(BT_MODULE_UUID);
     }
 
+    private String getSensorType(String data) {
+        if(data.contains("/")) return TYPE_DUST_SENSOR;
+        else return TYPE_AIR_SENSOR;
+    }
+
     private String checkRaspPiAddr(String raspPiAddr) {
-        String sensorTeam = null;
+        String sensor = "";
 
-        if(raspberryPiAddrList_1.contains(raspPiAddr)) sensorTeam = "1jo";
-        else if(raspberryPiAddrList_2.contains(raspPiAddr)) sensorTeam = "2jo";
-        else if(raspberryPiAddrList_3.contains(raspPiAddr)) sensorTeam = "3jo";
-        else if(raspberryPiAddrList_4.contains(raspPiAddr)) sensorTeam = "4jo";
-        else if(raspberryPiAddrList_5.contains(raspPiAddr)) sensorTeam = "5jo";
-        else if(raspberryPiAddrList_ta.contains(raspPiAddr)) sensorTeam = "ta";
+        switch(raspPiAddr){
+            case "D8:3A:DD:79:8F:97":
+                sensor = "dust sensor 1";
+                break;
+            case "D8:3A:DD:79:8F:B9":
+                sensor = "dust sensor 2";
+                break;
+            case "D8:3A:DD:79:8F:54":
+                sensor = "dust sensor 3";
+                break;
+            case "D8:3A:DD:79:8F:80":
+                sensor = "dust sensor 4";
+                break;
+            case "air quality sensor 1":
+                sensor = "air quality sensor 1";
+                break;
+            case "air quality sensor 2":
+                sensor = "air quality sensor 2";
+                break;
+            case "air quality sensor 3":
+                sensor = "air quality sensor 3";
+                break;
+            case "air quality sensor 4":
+                sensor = "air quality sensor 4";
+                break;
+            default:
+                break;
+        }
 
-        return sensorTeam;
+        return sensor;
     }
 }
