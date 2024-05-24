@@ -6,12 +6,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.wifi.ScanResult;
-import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -57,7 +52,6 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private Retrofit retrofit;
     private comm_data service;
     private BluetoothAdapter blead;
-    private WifiManager wifiManager;
     private CustomDialog customDialog;
     private static ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
