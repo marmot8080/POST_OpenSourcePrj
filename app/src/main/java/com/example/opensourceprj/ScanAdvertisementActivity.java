@@ -61,13 +61,13 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     private Switch switch_directly_send;
     private Toast toast;
 
-    private String id;  // 핸드폰 고유 id
-    private String location = "";    // 현재 위치
+    private String androidID;  // 핸드폰 고유 id
+    private String location = null; // 현재 위치
     private static final String mode = "advertising";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
     private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
-    private static final String FILE_NAME = "/advertisement.csv";
+    private static final String FILE_NAME = "/scan_data.csv";
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",
             "D8:3A:DD:42:AC:64",
@@ -118,7 +118,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         blead = BluetoothAdapter.getDefaultAdapter();
         toast = Toast.makeText(ScanAdvertisementActivity.this, null, Toast.LENGTH_SHORT);
 
-        id = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        androidID = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 
         try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
@@ -290,16 +290,17 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                     String line;
                     while ((line = br.readLine()) != null) {
-                        String[] data = line.split(",", 7);
+                        String[] data = line.split(",", 8);
                         String sensorType = data[0];
                         String sensorTeam = data[1];
-                        String macAddr = data[2];
-                        String OTP = data[3];
-                        String key = data[4];
-                        String sensorData = data[5];
-                        String sensingTime = data[6];
+                        String collectMode = data[2];
+                        String macAddr = data[3];
+                        String OTP = data[4];
+                        String key = data[5];
+                        String sensorData = data[6];
+                        String sensingTime = data[7];
 
-                        datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, key, sensorData));
+                        datalist.add(new BLEdata_storage(sensorType, sensorTeam, collectMode, macAddr, sensingTime, OTP, key, sensorData));
                     }
                     br.close();
                     fr.close();
@@ -310,6 +311,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         for (int i = 0; i < datalist.size() - 1; i++) {
                             bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
                             bw.write("," + datalist.get(i).get_sensor_team());
+                            bw.write("," + datalist.get(i).get_mode());
                             bw.write("," + datalist.get(i).get_mac_addr());
                             bw.write("," + datalist.get(i).get_otp());
                             bw.write("," + datalist.get(i).get_key());
@@ -384,18 +386,19 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                                 String line;
                                 while ((line = br.readLine()) != null) {
-                                    String[] data = line.split(",", 7);
+                                    String[] data = line.split(",", 8);
                                     String sensorType = data[0];
                                     String sensorTeam = data[1];
-                                    String macAddr = data[2];
-                                    String OTP = data[3];
-                                    String key = data[4];
-                                    String sensorData = data[5];
-                                    String sensingTime = data[6];
+                                    String collectMode = data[2];
+                                    String macAddr = data[3];
+                                    String OTP = data[4];
+                                    String key = data[5];
+                                    String sensorData = data[6];
+                                    String sensingTime = data[7];
 
                                     Call<String> call;
-                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, key, sensorData);
-                                    else call = service.air_sensing(sensorTeam, mode, macAddr, id, sensingTime, OTP, key, sensorData);
+                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
+                                    else call = service.air_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
 
                                     call.enqueue(new Callback<String>() {
                                         @Override
@@ -406,7 +409,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                         @Override
                                         public void onFailure(Call<String> call, Throwable t) {
                                             // 서버 전송에 실패한 데이터들은 datalist에 저장
-                                            datalist.add(new BLEdata_storage(sensorType, sensorTeam, macAddr, sensingTime, OTP, key, sensorData));
+                                            datalist.add(new BLEdata_storage(sensorType, sensorTeam, collectMode, macAddr, sensingTime, OTP, key, sensorData));
                                             Log.d("ServerCommunicationFail", "failed to communicate with server", t);
                                         }
                                     });
@@ -423,6 +426,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                                     for (int i = 0; i < datalist.size(); i++) {
                                         bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
                                         bw.write("," + datalist.get(i).get_sensor_team());
+                                        bw.write("," + datalist.get(i).get_mode());
                                         bw.write("," + datalist.get(i).get_mac_addr());
                                         bw.write("," + datalist.get(i).get_otp());
                                         bw.write("," + datalist.get(i).get_key());
@@ -483,10 +487,11 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                 String sensorData;
                 if(sensorType.equals(TYPE_DUST_SENSOR)) sensorData = extractDustSensorData(hexData);
                 else sensorData = extractAirSensorData(hexData);
+                getLocation(); // location 값 획득
 
                 switch_directly_send = findViewById(R.id.Switch_directly_send);
 
-                if (switch_directly_send.isChecked() == true) {
+                if (switch_directly_send.isChecked() == true && location != null) {
                     if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                         try {
                             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
@@ -497,8 +502,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                             BufferedReader br = new BufferedReader(fr);
 
                             Call<String> call;
-                            if(sensorType == TYPE_DUST_SENSOR) call = service.dust_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, location, sensorData);
-                            else call = service.air_sensing(sensorTeam, mode, MacAddr, id, sensingTime, OTP, location, sensorData);
+                            if(sensorType == TYPE_DUST_SENSOR) call = service.dust_sensing(sensorTeam, mode, MacAddr, androidID, sensingTime, OTP, location, sensorData);
+                            else call = service.air_sensing(sensorTeam, mode, MacAddr, androidID, sensingTime, OTP, location, sensorData);
 
                             call.enqueue(new Callback<String>() {
                                 @Override
@@ -531,8 +536,8 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                         toast.setText("NETWORK NOT CONNECTED");
                         toast.show();
                     }
-                } else {
-                    BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, MacAddr, sensingTime, OTP, "key", sensorData);
+                } else if(location != null) {
+                    BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, mode, MacAddr, sensingTime, OTP, location, sensorData);
                     datalist.add(data);
 
                     try {
@@ -546,6 +551,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                         bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_type()));
                         bw.write("," + datalist.get(datalist.size() - 1).get_sensor_team());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_mode());
                         bw.write("," + datalist.get(datalist.size() - 1).get_mac_addr());
                         bw.write("," + datalist.get(datalist.size() - 1).get_otp());
                         bw.write("," + datalist.get(datalist.size() - 1).get_key());
@@ -745,5 +751,28 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
         } else {
             Log.d("Tag", "isNull? : " + "Null");
         }
+    }
+
+    public void getLocation() {
+        String wifiData = NetworkManager.getWifiData(ScanAdvertisementActivity.this);
+
+        if(wifiData != null) {
+            comm_data service = retrofit.create(comm_data.class);
+
+            Call<String> call = null;
+            call = service.location(wifiData);
+
+            call.enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(Call<String> call, Response<String> response) {
+                    location = response.body().toString();
+                }
+
+                @Override
+                public void onFailure(Call<String> call, Throwable t) {
+                    location = null;
+                }
+            });
+        } else location = null;
     }
 }
