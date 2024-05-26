@@ -21,9 +21,6 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -40,14 +37,16 @@ public class ConnectedThread extends Thread{
 
     private String id;  // 핸드폰 고유 id
     private String location = null;    // 현재 위치
+    private int recentSensingTime = 0;
     private static final String mode = "connection";
+    private static final String sensorTeam = "2jo";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
 
     private static String connectedDeviceAddr = null;
     private ArrayList<BLEdata_storage> datalist = new ArrayList<>();
 
-    public ConnectedThread(Context context, View view, String id, BluetoothSocket socket) {
+    public ConnectedThread(Context context, View view, String id, String location, BluetoothSocket socket) {
         mmSocket = socket;
         InputStream tmpIn = null;
         OutputStream tmpOut = null;
@@ -56,6 +55,7 @@ public class ConnectedThread extends Thread{
         this.context = context;
         text_view_data = (TextView) view;
         this.id = id;
+        this.location = location;
 
         Gson gson = new GsonBuilder().setLenient().create();
         retrofit = new Retrofit.Builder()
@@ -87,7 +87,9 @@ public class ConnectedThread extends Thread{
                 file.createNewFile();
             }
 
-            while (mmSocket.isConnected()) {
+            datalist = new ArrayList<>();
+            int count = 0;
+            while (mmSocket.isConnected() && count < 60) {
                 bytes = mmInStream.available();
 
                 if(bytes != 0) {
@@ -98,7 +100,6 @@ public class ConnectedThread extends Thread{
                     String sensingData = new String(buffer, StandardCharsets.UTF_8);
 
                     String sensorType = getSensorType(sensingData);
-                    getLocation();
 
                     String[] data = sensingData.split("!", 4);
                     String sensorData = data[0];
@@ -106,38 +107,55 @@ public class ConnectedThread extends Thread{
                     String OTP = data[2];
                     String macAddr = data[3];
 
-                    BLEdata_storage bleData = new BLEdata_storage(sensorType, id, mode, macAddr, sensingTime, OTP, location, sensorData);
-                    datalist.add(bleData);
+                    if(Integer.valueOf(sensingTime) > recentSensingTime) {
+                        recentSensingTime = Integer.valueOf(sensingTime);
 
-                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-                    BufferedWriter bw = new BufferedWriter(fw);
+                        BLEdata_storage bleData = new BLEdata_storage(sensorType, sensorTeam, mode, macAddr, sensingTime, OTP, location, sensorData);
+                        datalist.add(bleData);
 
-                    bw.write(String.valueOf(datalist.get(datalist.size() - 1).get_sensor_team()));
-                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_mac_addr()));
-                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_otp()));
-                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_sensor_data()));
-                    bw.write("," + String.valueOf(datalist.get(datalist.size() - 1).get_time()));
+                        FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+                        BufferedWriter bw = new BufferedWriter(fw);
 
-                    bw.newLine();
+                        bw.write(datalist.get(datalist.size() - 1).get_sensor_type());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_sensor_team());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_mode());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_mac_addr());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_otp());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_key());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_sensor_data());
+                        bw.write("," + datalist.get(datalist.size() - 1).get_time());
 
-                    bw.close();
-                    fw.close();
+                        bw.newLine();
 
-                    FileReader fr = new FileReader(file.getAbsoluteFile());
-                    BufferedReader br = new BufferedReader(fr);
+                        bw.close();
+                        fw.close();
 
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        text_view_data.setText(text_view_data.getText() + line + "\n");
+                        FileReader fr = new FileReader(file.getAbsoluteFile());
+                        BufferedReader br = new BufferedReader(fr);
+
+                        String line = datalist.get(datalist.size() - 1).get_sensor_type() +
+                                "," + datalist.get(datalist.size() - 1).get_sensor_team() +
+                                "," + datalist.get(datalist.size() - 1).get_mode() +
+                                "," + datalist.get(datalist.size() - 1).get_mac_addr() +
+                                "," + datalist.get(datalist.size() - 1).get_otp() +
+                                "," + datalist.get(datalist.size() - 1).get_key() +
+                                "," + datalist.get(datalist.size() - 1).get_sensor_data() +
+                                "," + datalist.get(datalist.size() - 1).get_time();
+                        text_view_data.append(line + "\n");
+
+                        br.close();
+                        fr.close();
+
+                        count++;
+                        Thread.sleep(500);
                     }
-
-                    br.close();
-                    fr.close();
                 }
             }
             cancel();
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -152,29 +170,6 @@ public class ConnectedThread extends Thread{
 
     public String getConnectedDeviceAddr() {
         return connectedDeviceAddr;
-    }
-
-    public void getLocation() {
-        String wifiData = NetworkManager.getWifiData(context);
-
-        if(wifiData != null) {
-            comm_data service = retrofit.create(comm_data.class);
-
-            Call<String> call = null;
-            call = service.location(wifiData);
-
-            call.enqueue(new Callback<String>() {
-                @Override
-                public void onResponse(Call<String> call, Response<String> response) {
-                    location = response.body().toString();
-                }
-
-                @Override
-                public void onFailure(Call<String> call, Throwable t) {
-                    location = null;
-                }
-            });
-        } else location = null;
     }
 
     public String getSensorType(String data) {
