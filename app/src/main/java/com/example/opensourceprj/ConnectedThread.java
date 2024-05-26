@@ -81,6 +81,14 @@ public class ConnectedThread extends Thread{
         byte[] buffer = new byte[1024];
         int bytes;
 
+        try {
+            String systemSec = String.valueOf(System.currentTimeMillis() / 1000);
+            byte[] systemSecBytes = systemSec.getBytes();
+            mmOutStream.write(systemSecBytes);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
         try{
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/scan_data.csv");
             if (!file.exists()) {
