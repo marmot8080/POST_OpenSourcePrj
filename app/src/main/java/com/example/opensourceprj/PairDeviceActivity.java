@@ -44,6 +44,7 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 public class PairDeviceActivity extends AppCompatActivity {
     private final String TAG = "PairDeviceActivity";
     private String androidID;  // 핸드폰 고유 id
+    private String location = null;
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
     private final UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -62,7 +63,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     private ArrayList<String> deviceAddressArray;
 
     private TextView text_view_status, text_view_data;
-    private Button btn_back;
+    private Button btn_back, btn_delete_all, btn_delete_latest_value;
     private ListView list_view_paired_adapter;
 
     @Override
@@ -106,6 +107,11 @@ public class PairDeviceActivity extends AppCompatActivity {
 
         list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
         list_view_paired_adapter.setVisibility(View.GONE);
+
+        btn_delete_all = findViewById(R.id.Btn_delete_all);
+        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+        btn_delete_all.setVisibility(View.GONE);
+        btn_delete_latest_value.setVisibility(View.GONE);
 
         blead = BluetoothAdapter.getDefaultAdapter();
 
@@ -159,7 +165,58 @@ public class PairDeviceActivity extends AppCompatActivity {
         }
     }
 
-    public void onClickButtonSend(View view) {
+    public void onLocation(View v) {
+        String wifiData = NetworkManager.getWifiData(PairDeviceActivity.this);
+
+        if (wifiData != null) {
+            comm_data service = retrofit.create(comm_data.class);
+
+            Call<String> call = null;
+            call = service.location(wifiData);
+
+            call.enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(Call<String> call, Response<String> response) {
+                    customDialog = new CustomDialog(PairDeviceActivity.this, "현재 위치를 " + response.body().toString() + "로 저장하시겠습니까?", "아니오", "예");
+                    customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+
+                        @Override
+                        public void cancelClicked() {
+                            location = response.body().toString();
+                        }
+
+                        @Override
+                        public void acceptClicked() {
+                            location = null;
+                        }
+                    });
+                }
+
+                @Override
+                public void onFailure(Call<String> call, Throwable t) {
+                    location = null;
+                }
+            });
+        }
+        if(location == null){
+            customDialog = new CustomDialog(PairDeviceActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
+            customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+
+                @Override
+                public void cancelClicked() {
+                    location = null;
+                }
+
+                @Override
+                public void acceptClicked() {
+                    location = "2-1";
+                }
+            });
+            customDialog.show();
+        }
+    }
+
+    public void onSend(View view) {
         try {
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
             if (!file.exists()) {
@@ -309,11 +366,13 @@ public class PairDeviceActivity extends AppCompatActivity {
                 }
 
                 try {
-                    btSocket.connect();
+                    if(location != null) {
+                        btSocket.connect();
 
-                    connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, btSocket);
-                    text_view_status.setText("connected to " + name);
-                    connectedThread.start();
+                        connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, location, btSocket);
+                        text_view_status.setText("connected to " + name);
+                        connectedThread.start();
+                    } else Toast.makeText(PairDeviceActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     try {
                         e.printStackTrace();
@@ -349,11 +408,13 @@ public class PairDeviceActivity extends AppCompatActivity {
                         }
 
                         try {
-                            btSocket.connect();
+                            if(location != null) {
+                                btSocket.connect();
 
-                            connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, btSocket);
-                            text_view_status.setText("connected to" + name);
-                            connectedThread.start();
+                                connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, location, btSocket);
+                                text_view_status.setText("connected to " + name);
+                                connectedThread.start();
+                            } else Toast.makeText(PairDeviceActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
                         } catch (IOException e) {
                             try {
                                 Toast.makeText(PairDeviceActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
@@ -371,6 +432,130 @@ public class PairDeviceActivity extends AppCompatActivity {
         }
     }
 
+    public void onToggleDelete(View v) {
+        boolean on = ((ToggleButton) v).isChecked();
+        btn_delete_all = findViewById(R.id.Btn_delete_all);
+        btn_delete_latest_value = findViewById(R.id.Btn_delete_latest_value);
+
+        if (on) {
+            btn_delete_all.setVisibility(View.VISIBLE);
+            btn_delete_latest_value.setVisibility(View.VISIBLE);
+        } else {
+            btn_delete_all.setVisibility(View.GONE);
+            btn_delete_latest_value.setVisibility(View.GONE);
+        }
+    }
+
+    public void onDeleteAll(View v) {
+        customDialog = new CustomDialog(PairDeviceActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
+        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+            @Override
+            public void cancelClicked() {
+
+            }
+
+            @Override
+            public void acceptClicked() {
+                try {
+                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+
+                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                    BufferedWriter bw = new BufferedWriter(fw);
+
+                    bw.write("");
+
+                    text_view_data = findViewById(R.id.Text_view_data);
+                    text_view_data.setText("");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        customDialog.show();
+    }
+
+    public void onDeleteLatest(View v) {
+        customDialog = new CustomDialog(PairDeviceActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
+        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+            @Override
+            public void cancelClicked() {
+
+            }
+
+            @Override
+            public void acceptClicked() {
+                try {
+                    File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+
+                    FileReader fr = new FileReader(file.getAbsoluteFile());
+                    BufferedReader br = new BufferedReader(fr);
+
+                    datalist = new ArrayList<>();
+
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        String[] data = line.split(",", 8);
+                        String sensorType = data[0];
+                        String sensorTeam = data[1];
+                        String collectMode = data[2];
+                        String macAddr = data[3];
+                        String OTP = data[4];
+                        String key = data[5];
+                        String sensorData = data[6];
+                        String sensingTime = data[7];
+
+                        datalist.add(new BLEdata_storage(sensorType, sensorTeam, collectMode, macAddr, sensingTime, OTP, key, sensorData));
+                    }
+                    br.close();
+                    fr.close();
+
+                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
+                    BufferedWriter bw = new BufferedWriter(fw);
+                    if (!datalist.isEmpty()) {
+                        for (int i = 0; i < datalist.size() - 1; i++) {
+                            bw.write(String.valueOf(datalist.get(i).get_sensor_type()));
+                            bw.write("," + datalist.get(i).get_sensor_team());
+                            bw.write("," + datalist.get(i).get_mode());
+                            bw.write("," + datalist.get(i).get_mac_addr());
+                            bw.write("," + datalist.get(i).get_otp());
+                            bw.write("," + datalist.get(i).get_key());
+                            bw.write("," + datalist.get(i).get_sensor_data());
+                            bw.write("," + datalist.get(i).get_time());
+
+                            bw.newLine();
+                        }
+                    }
+                    bw.close();
+                    fw.close();
+
+                    text_view_data = findViewById(R.id.Text_view_data);
+                    text_view_data.setText("");
+                    fr = new FileReader(file.getAbsoluteFile());
+                    br = new BufferedReader(fr);
+                    while ((line = br.readLine()) != null) {
+                        text_view_data.setText(text_view_data.getText() + line + "\n");
+                    }
+
+                    br.close();
+                    fr.close();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+
+        customDialog.show();
+    }
+
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
@@ -380,11 +565,6 @@ public class PairDeviceActivity extends AppCompatActivity {
         }
 
         return device.createInsecureRfcommSocketToServiceRecord(BT_MODULE_UUID);
-    }
-
-    private String getSensorType(String data) {
-        if(data.contains("/")) return TYPE_DUST_SENSOR;
-        else return TYPE_AIR_SENSOR;
     }
 
     private String checkRaspPiAddr(String raspPiAddr) {
@@ -403,7 +583,7 @@ public class PairDeviceActivity extends AppCompatActivity {
             case "D8:3A:DD:79:8F:80":
                 sensor = "dust sensor 4";
                 break;
-            case "air quality sensor 1":
+            case "D8:3A:DD:C1:89:70":
                 sensor = "air quality sensor 1";
                 break;
             case "air quality sensor 2":
