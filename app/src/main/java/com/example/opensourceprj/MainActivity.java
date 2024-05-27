@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
         btn_scan_advertisement.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ScanAdvertisementActivity.class);
+                Intent intent = new Intent(MainActivity.this, AdvertisementActivity.class);
                 startActivity(intent);
             }
         });

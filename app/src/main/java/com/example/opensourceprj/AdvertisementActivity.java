@@ -48,7 +48,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class ScanAdvertisementActivity extends AppCompatActivity {
+public class AdvertisementActivity extends AppCompatActivity {
     private Retrofit retrofit;
     private comm_data service;
     private BluetoothAdapter blead;
@@ -115,11 +115,11 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_scan_advertisement);
+        setContentView(R.layout.activity_advertisement);
 
         // 객체 생성
         blead = BluetoothAdapter.getDefaultAdapter();
-        toast = Toast.makeText(ScanAdvertisementActivity.this, null, Toast.LENGTH_SHORT);
+        toast = Toast.makeText(AdvertisementActivity.this, null, Toast.LENGTH_SHORT);
 
         androidID = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
 
@@ -176,7 +176,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     }
 
     public void onLocation(View v) {
-        String wifiData = NetworkManager.getWifiData(ScanAdvertisementActivity.this);
+        String wifiData = NetworkManager.getWifiData(AdvertisementActivity.this);
 
         if (wifiData != null) {
             comm_data service = retrofit.create(comm_data.class);
@@ -187,7 +187,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             call.enqueue(new Callback<String>() {
                 @Override
                 public void onResponse(Call<String> call, Response<String> response) {
-                    customDialog = new CustomDialog(ScanAdvertisementActivity.this, "현재 위치를 " + response.body().toString() + "로 저장하시겠습니까?", "아니오", "예");
+                    customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 " + response.body().toString() + "로 저장하시겠습니까?", "아니오", "예");
                     customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
                         @Override
@@ -210,7 +210,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
             });
         }
         if(location == null){
-            customDialog = new CustomDialog(ScanAdvertisementActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
+            customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
             customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
                 @Override
@@ -273,7 +273,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     }
 
     public void onDeleteAll(View v) {
-        customDialog = new CustomDialog(ScanAdvertisementActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
+        customDialog = new CustomDialog(AdvertisementActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
         customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
             @Override
             public void cancelClicked() {
@@ -305,7 +305,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
     }
 
     public void onDeleteLatest(View v) {
-        customDialog = new CustomDialog(ScanAdvertisementActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
+        customDialog = new CustomDialog(AdvertisementActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
         customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
             @Override
             public void cancelClicked() {
@@ -402,7 +402,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                 br.close();
                 fr.close();
 
-                customDialog = new CustomDialog(ScanAdvertisementActivity.this,
+                customDialog = new CustomDialog(AdvertisementActivity.this,
                         "저장된 데이터를 서버에 전송하시겠습니까?",
                         "취소",
                         "전송");
@@ -414,7 +414,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
 
                     @Override
                     public void acceptClicked() {
-                        if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
+                        if (NetworkManager.getConnectivityStatus(AdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                             try {
                                 FileReader fr = new FileReader(file.getAbsoluteFile());
                                 BufferedReader br = new BufferedReader(fr);
@@ -535,7 +535,7 @@ public class ScanAdvertisementActivity extends AppCompatActivity {
                     switch_directly_send = findViewById(R.id.Switch_directly_send);
 
                     if (switch_directly_send.isChecked() == true) {
-                        if (NetworkManager.getConnectivityStatus(ScanAdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
+                        if (NetworkManager.getConnectivityStatus(AdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                             try {
                                 File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
                                 if (!file.exists()) {
