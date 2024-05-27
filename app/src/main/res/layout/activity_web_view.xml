@@ -20,8 +20,38 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.02" />
 
+    <ToggleButton
+        android:id="@+id/toggle_Btn_show_data"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ToggleButton"
+        android:checked="false"
+        android:onClick="onToggleChange"
+        android:textOff="dust"
+        android:textOn="air"
+        android:textSize="12dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.95"
+        app:layout_constraintVertical_bias="0.02"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
     <WebView
-        android:id="@+id/Web_server_data"
+        android:id="@+id/Web_airSen_server_data"
+        android:layout_width="370dp"
+        android:layout_height="640dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8" />
+
+    <WebView
+        android:id="@+id/Web_dustSen_server_data"
         android:layout_width="370dp"
         android:layout_height="640dp"
         app:layout_constraintBottom_toBottomOf="parent"
