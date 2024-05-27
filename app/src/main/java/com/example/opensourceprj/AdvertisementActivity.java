@@ -189,37 +189,38 @@ public class AdvertisementActivity extends AppCompatActivity {
             call.enqueue(new Callback<String>() {
                 @Override
                 public void onResponse(Call<String> call, Response<String> response) {
-                    customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 " + response.body().toString() + "로 저장하시겠습니까?", "아니오", "예");
-                    customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                    String result = response.body().toString();
+                    if(result.equals("Localization Error")) {
+                        customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
+                        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
-                        @Override
-                        public void cancelClicked() {
-                            String result = response.body().toString();
-                            if(result.equals("Localiztion Error")) {
-                                customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
-                                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+                            @Override
+                            public void cancelClicked() {
+                                location = null;
+                            }
 
-                                    @Override
-                                    public void cancelClicked() {
-                                        location = null;
-                                    }
+                            @Override
+                            public void acceptClicked() {
+                                location = "2-1";
+                            }
+                        });
+                        customDialog.show();
+                    } else {
+                        customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 " + result + "로 저장하시겠습니까?", "아니오", "예");
+                        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
-                                    @Override
-                                    public void acceptClicked() {
-                                        location = "2-1";
-                                    }
-                                });
-                                customDialog.show();
-                            } else {
+                            @Override
+                            public void cancelClicked() {
+                                location = null;
+                            }
+
+                            @Override
+                            public void acceptClicked() {
                                 location = result;
                             }
-                        }
-
-                        @Override
-                        public void acceptClicked() {
-                            location = null;
-                        }
-                    });
+                        });
+                        customDialog.show();
+                    }
                 }
 
                 @Override
@@ -227,7 +228,7 @@ public class AdvertisementActivity extends AppCompatActivity {
                     location = null;
                 }
             });
-        } else if(location == null){
+        } else {
             customDialog = new CustomDialog(AdvertisementActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
             customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
