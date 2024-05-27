@@ -6,13 +6,14 @@
     android:layout_height="match_parent"
     tools:context=".WebViewActivity">
 
-    <Button
+    <android.widget.Button
         android:id="@+id/Btn_back"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Back"
         android:textSize="18dp"
         android:textStyle="bold"
+        android:background="#87CEEB"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.05"
@@ -29,8 +30,9 @@
         android:onClick="onToggleChange"
         android:textOff="dust"
         android:textOn="air"
-        android:textSize="12dp"
+        android:textSize="18dp"
         android:textStyle="bold"
+        android:background="#9ACD32"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
