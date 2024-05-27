@@ -302,7 +302,7 @@ public class ConnectionActivity extends AppCompatActivity {
                                     String sensingTime = data[7];
 
                                     Call<String> call;
-                                    if(sensorType.equals(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
+                                    if(sensorType.contains(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
                                     else call = service.air_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
 
                                     call.enqueue(new Callback<String>() {
@@ -321,6 +321,8 @@ public class ConnectionActivity extends AppCompatActivity {
 
                                     Thread.sleep(500);
                                 }
+                                br.close();
+                                fr.close();
 
                                 FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
                                 BufferedWriter bw = new BufferedWriter(fw);
@@ -341,10 +343,12 @@ public class ConnectionActivity extends AppCompatActivity {
                                         bw.newLine();
                                     }
                                 }
+                                bw.close();
+                                fw.close();
 
                                 text_view_data = findViewById(R.id.Text_view_data);
                                 text_view_data.setText("");
-                                br.close();
+                                fr = new FileReader(file.getAbsoluteFile());
                                 br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
                                 while ((line = br.readLine()) != null) {
                                     text_view_data.setText(text_view_data.getText() + line + "\n");
@@ -354,9 +358,7 @@ public class ConnectionActivity extends AppCompatActivity {
                                 new DustNetworkTask().execute();
                                 new AirNetworkTask().execute();
 
-                                bw.close();
                                 br.close();
-                                fw.close();
                                 fr.close();
                             } catch (FileNotFoundException e) {
                                 throw new RuntimeException(e);

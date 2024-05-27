@@ -12,7 +12,6 @@
         android:layout_height="460dp"
         android:hint="data"
         android:textSize="12sp"
-        android:textStyle="bold"
         android:gravity="center"
         android:maxLines="1000"
         android:scrollbars="vertical"

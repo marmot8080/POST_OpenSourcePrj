@@ -82,7 +82,10 @@ public class AdvertisementActivity extends AppCompatActivity {
             "D8:3A:DD:79:8F:B9",
             "D8:3A:DD:79:8F:54",
             "D8:3A:DD:79:8F:80",
-            "D8:3A:DD:C1:89:70"
+            "D8:3A:DD:C1:89:70",
+            "D8:3A:DD:C1:88:FE",
+            "D8:3A:DD:C1:89:79",
+            "D8:3A:DD:C1:89:C7"
     }; // 2조 라즈베리파이 Mac address
     private static final String[] raspberryPiAddr_3 = {
             "D8:3A:DD:79:8E:D9",
@@ -257,13 +260,18 @@ public class AdvertisementActivity extends AppCompatActivity {
                 toast.show();
             }
 
-            if (blead.isEnabled()) {
-                messageQueue = new ArrayList<>();
-                // bluetooth 스캔 시작
-                blead.startLeScan(scancallback_le);
+            if(location != null) {
+                if (blead.isEnabled()) {
+                    messageQueue = new ArrayList<>();
+                    // bluetooth 스캔 시작
+                    blead.startLeScan(scancallback_le);
+                } else {
+                    toast.setText("Bluetooth is off");
+                    toast.show();
+                    ((ToggleButton) v).setChecked(false);
+                }
             } else {
-                toast.setText("Bluetooth is off");
-                toast.show();
+                Toast.makeText(AdvertisementActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
                 ((ToggleButton) v).setChecked(false);
             }
         } else {
@@ -415,8 +423,7 @@ public class AdvertisementActivity extends AppCompatActivity {
             if (br.readLine() == "") {
                 br.close();
                 fr.close();
-                toast.setText("파일이 비어있습니다.");
-                toast.show();
+                Toast.makeText(AdvertisementActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
             } else {
                 br.close();
                 fr.close();
@@ -453,10 +460,8 @@ public class AdvertisementActivity extends AppCompatActivity {
                                     String sensingTime = data[7];
 
                                     Call<String> call;
-                                    if (sensorType.equals(TYPE_DUST_SENSOR))
-                                        call = service.dust_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
-                                    else
-                                        call = service.air_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
+                                    if(sensorType.contains(TYPE_DUST_SENSOR)) call = service.dust_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
+                                    else call = service.air_sensing(sensorTeam, collectMode, macAddr, androidID, sensingTime, OTP, key, sensorData);
 
                                     call.enqueue(new Callback<String>() {
                                         @Override
@@ -474,6 +479,8 @@ public class AdvertisementActivity extends AppCompatActivity {
 
                                     Thread.sleep(500);
                                 }
+                                br.close();
+                                fr.close();
 
                                 FileWriter fw = new FileWriter(file.getAbsoluteFile(), false);
                                 BufferedWriter bw = new BufferedWriter(fw);
@@ -494,18 +501,22 @@ public class AdvertisementActivity extends AppCompatActivity {
                                         bw.newLine();
                                     }
                                 }
+                                bw.close();
+                                fw.close();
 
                                 tv_data = findViewById(R.id.Text_view_data);
                                 tv_data.setText("");
-                                br.close();
+                                fr = new FileReader(file.getAbsoluteFile());
                                 br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
                                 while ((line = br.readLine()) != null) {
                                     tv_data.setText(tv_data.getText() + line + "\n");
                                 }
 
-                                bw.close();
+                                // 서버 데이터 크롤링
+                                new DustNetworkTask().execute();
+                                new AirNetworkTask().execute();
+
                                 br.close();
-                                fw.close();
                                 fr.close();
                             } catch (FileNotFoundException e) {
                                 throw new RuntimeException(e);
@@ -514,12 +525,8 @@ public class AdvertisementActivity extends AppCompatActivity {
                             } catch (InterruptedException e) {
                                 throw new RuntimeException(e);
                             }
-                            // 서버 데이터 업데이트
-                            new DustNetworkTask().execute();
-                            new AirNetworkTask().execute();
                         } else {
-                            toast.setText("NETWORK NOT CONNECTED");
-                            toast.show();
+                            Toast.makeText(AdvertisementActivity.this, "NETWORK NOT CONNECTED", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
