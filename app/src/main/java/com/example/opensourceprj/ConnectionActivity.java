@@ -624,13 +624,13 @@ public class ConnectionActivity extends AppCompatActivity {
             case "D8:3A:DD:C1:89:70":
                 sensor = "air quality sensor 1";
                 break;
-            case "air quality sensor 2":
+            case "D8:3A:DD:C1:88:FE":
                 sensor = "air quality sensor 2";
                 break;
-            case "air quality sensor 3":
+            case "D8:3A:DD:C1:89:79":
                 sensor = "air quality sensor 3";
                 break;
-            case "air quality sensor 4":
+            case "D8:3A:DD:C1:89:C7":
                 sensor = "air quality sensor 4";
                 break;
             default:
