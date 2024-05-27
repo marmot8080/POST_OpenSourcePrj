@@ -198,7 +198,25 @@ public class ConnectionActivity extends AppCompatActivity {
 
                         @Override
                         public void cancelClicked() {
-                            location = response.body().toString();
+                            String result = response.body().toString();
+                            if(result.equals("Localiztion Error")) {
+                                customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
+                                customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
+
+                                    @Override
+                                    public void cancelClicked() {
+                                        location = null;
+                                    }
+
+                                    @Override
+                                    public void acceptClicked() {
+                                        location = "2-1";
+                                    }
+                                });
+                                customDialog.show();
+                            } else {
+                                location = result;
+                            }
                         }
 
                         @Override
@@ -213,8 +231,7 @@ public class ConnectionActivity extends AppCompatActivity {
                     location = null;
                 }
             });
-        }
-        if(location == null){
+        } else if(location == null){
             customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
             customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
