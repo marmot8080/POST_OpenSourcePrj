@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
         btn_pair_device.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, PairDeviceActivity.class);
+                Intent intent = new Intent(MainActivity.this, ConnectionActivity.class);
                 startActivity(intent);
             }
         });

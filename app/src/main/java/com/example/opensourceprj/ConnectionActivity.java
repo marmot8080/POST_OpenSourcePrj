@@ -41,7 +41,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class PairDeviceActivity extends AppCompatActivity {
+public class ConnectionActivity extends AppCompatActivity {
     private final String TAG = "PairDeviceActivity";
     private String androidID;  // 핸드폰 고유 id
     private String location = null;
@@ -69,7 +69,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pair_device);
+        setContentView(R.layout.activity_connection);
 
         try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
@@ -166,7 +166,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     }
 
     public void onLocation(View v) {
-        String wifiData = NetworkManager.getWifiData(PairDeviceActivity.this);
+        String wifiData = NetworkManager.getWifiData(ConnectionActivity.this);
 
         if (wifiData != null) {
             comm_data service = retrofit.create(comm_data.class);
@@ -177,7 +177,7 @@ public class PairDeviceActivity extends AppCompatActivity {
             call.enqueue(new Callback<String>() {
                 @Override
                 public void onResponse(Call<String> call, Response<String> response) {
-                    customDialog = new CustomDialog(PairDeviceActivity.this, "현재 위치를 " + response.body().toString() + "로 저장하시겠습니까?", "아니오", "예");
+                    customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 " + response.body().toString() + "로 저장하시겠습니까?", "아니오", "예");
                     customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
                         @Override
@@ -199,7 +199,7 @@ public class PairDeviceActivity extends AppCompatActivity {
             });
         }
         if(location == null){
-            customDialog = new CustomDialog(PairDeviceActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
+            customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 읽어오지 못했습니다.\n임시 위치로 2-1을 설정하시겠습니까?", "아니오", "예");
             customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
 
                 @Override
@@ -230,12 +230,12 @@ public class PairDeviceActivity extends AppCompatActivity {
             if (br.readLine() == "") {
                 br.close();
                 fr.close();
-                Toast.makeText(PairDeviceActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ConnectionActivity.this, "파일이 비어있습니다.", Toast.LENGTH_SHORT).show();
             } else {
                 br.close();
                 fr.close();
 
-                customDialog = new CustomDialog(PairDeviceActivity.this,
+                customDialog = new CustomDialog(ConnectionActivity.this,
                         "저장된 데이터를 서버에 전송하시겠습니까?",
                         "취소",
                         "전송");
@@ -247,7 +247,7 @@ public class PairDeviceActivity extends AppCompatActivity {
 
                     @Override
                     public void acceptClicked() {
-                        if (NetworkManager.getConnectivityStatus(PairDeviceActivity.this) != NetworkManager.NOT_CONNECTED) {
+                        if (NetworkManager.getConnectivityStatus(ConnectionActivity.this) != NetworkManager.NOT_CONNECTED) {
                             try {
                                 FileReader fr = new FileReader(file.getAbsoluteFile());
                                 BufferedReader br = new BufferedReader(fr);
@@ -327,7 +327,7 @@ public class PairDeviceActivity extends AppCompatActivity {
                                 throw new RuntimeException(e);
                             }
                         } else {
-                            Toast.makeText(PairDeviceActivity.this, "NETWORK NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ConnectionActivity.this, "NETWORK NOT CONNECTED", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
@@ -369,14 +369,14 @@ public class PairDeviceActivity extends AppCompatActivity {
                     if(location != null) {
                         btSocket.connect();
 
-                        connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, location, btSocket);
+                        connectedThread = new ConnectedThread(ConnectionActivity.this, text_view_data, androidID, location, btSocket);
                         text_view_status.setText("connected to " + name);
                         connectedThread.start();
-                    } else Toast.makeText(PairDeviceActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
+                    } else Toast.makeText(ConnectionActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     try {
                         e.printStackTrace();
-                        Toast.makeText(PairDeviceActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ConnectionActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
                         text_view_status.setText("connection failed!");
                         btSocket.close();
                     } catch (IOException ex) {
@@ -384,9 +384,9 @@ public class PairDeviceActivity extends AppCompatActivity {
                     }
                 }
             } else if (address.equals(connectedThread.getConnectedDeviceAddr())) {
-                Toast.makeText(PairDeviceActivity.this, "Already Connected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ConnectionActivity.this, "Already Connected", Toast.LENGTH_SHORT).show();
             } else {
-                customDialog = new CustomDialog(PairDeviceActivity.this, "현재 기기와의 연결을 끊고 새 기기와 연결하시겠습니까?", "취소", "연결");
+                customDialog = new CustomDialog(ConnectionActivity.this, "현재 기기와의 연결을 끊고 새 기기와 연결하시겠습니까?", "취소", "연결");
                 customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
                     @Override
                     public void cancelClicked() {
@@ -411,13 +411,13 @@ public class PairDeviceActivity extends AppCompatActivity {
                             if(location != null) {
                                 btSocket.connect();
 
-                                connectedThread = new ConnectedThread(PairDeviceActivity.this, text_view_data, androidID, location, btSocket);
+                                connectedThread = new ConnectedThread(ConnectionActivity.this, text_view_data, androidID, location, btSocket);
                                 text_view_status.setText("connected to " + name);
                                 connectedThread.start();
-                            } else Toast.makeText(PairDeviceActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
+                            } else Toast.makeText(ConnectionActivity.this, "위치 정보를 확인해주세요.", Toast.LENGTH_SHORT).show();
                         } catch (IOException e) {
                             try {
-                                Toast.makeText(PairDeviceActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ConnectionActivity.this, "Unable to connect device", Toast.LENGTH_SHORT).show();
                                 text_view_status.setText("connection failed!");
                                 btSocket.close();
                             } catch (IOException ex) {
@@ -447,7 +447,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     }
 
     public void onDeleteAll(View v) {
-        customDialog = new CustomDialog(PairDeviceActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
+        customDialog = new CustomDialog(ConnectionActivity.this, "파일 내용을 전부 삭제하시겠습니까?", "취소", "삭제");
         customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
             @Override
             public void cancelClicked() {
@@ -479,7 +479,7 @@ public class PairDeviceActivity extends AppCompatActivity {
     }
 
     public void onDeleteLatest(View v) {
-        customDialog = new CustomDialog(PairDeviceActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
+        customDialog = new CustomDialog(ConnectionActivity.this, "최근 데이터를 삭제하시겠습니까?", "취소", "삭제");
         customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
             @Override
             public void cancelClicked() {
