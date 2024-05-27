@@ -8,11 +8,12 @@
 
     <TextView
         android:id="@+id/Text_view_data"
-        android:layout_width="360dp"
+        android:layout_width="400dp"
         android:layout_height="480dp"
+        android:hint="data"
+        android:textSize="12sp"
+        android:textStyle="bold"
         android:gravity="center"
-        android:hint="show data"
-        android:textSize="12dp"
         android:maxLines="1000"
         android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -43,6 +43,8 @@
         android:textSize="12sp"
         android:textStyle="bold"
         android:gravity="center"
+        android:maxLines="1000"
+        android:scrollbars="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
