@@ -161,6 +161,7 @@ public class ConnectionActivity extends AppCompatActivity {
             if (connectedThread == null || connectedThread.getConnectedDeviceAddr() == null)
                 text_view_status.setText("");
 
+            btArrayAdapter.clear();
             deviceAddressArray = new ArrayList<>();
             pairedDevices = blead.getBondedDevices();
             if(pairedDevices.size() > 0) {
