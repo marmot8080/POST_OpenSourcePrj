@@ -3,6 +3,8 @@ package com.example.opensourceprj;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
@@ -18,9 +20,14 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -31,6 +38,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -47,6 +58,8 @@ public class ConnectionActivity extends AppCompatActivity {
     private String location = null;
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
+    private static final String DUST_SENSOR_URL = "http://203.255.81.72:10021/dustsensor_v2/sensingpage/"; // dust sensor url
+    private static final String AIR_QUALITY_SENSOR_URL = "http://203.255.81.72:10021/airquality/sensingpage/"; // air quality sensor url
     private final UUID BT_MODULE_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     private static final String FILE_NAME = "/scan_data.csv";
 
@@ -62,7 +75,7 @@ public class ConnectionActivity extends AppCompatActivity {
     private ArrayAdapter<String> btArrayAdapter;
     private ArrayList<String> deviceAddressArray;
 
-    private TextView text_view_status, text_view_data;
+    private TextView text_view_status, text_view_data, text_dust_1, text_dust_2, text_dust_3, text_dust_4, text_air_1, text_air_2, text_air_3, text_air_4;
     private Button btn_back, btn_delete_all, btn_delete_latest_value;
     private ListView list_view_paired_adapter;
 
@@ -95,6 +108,10 @@ public class ConnectionActivity extends AppCompatActivity {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        // 서버 데이터 크롤링
+        new DustNetworkTask().execute();
+        new AirNetworkTask().execute();
 
         Gson gson = new GsonBuilder().setLenient().create();
         retrofit = new Retrofit.Builder()
@@ -140,25 +157,24 @@ public class ConnectionActivity extends AppCompatActivity {
 
         if (on) {
             list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
-            list_view_paired_adapter.setVisibility(View.VISIBLE);
 
-            btArrayAdapter.clear();
-            if(deviceAddressArray != null && !deviceAddressArray.isEmpty()) deviceAddressArray.clear();
+            if (connectedThread == null || connectedThread.getConnectedDeviceAddr() == null)
+                text_view_status.setText("");
 
-            if(connectedThread == null || connectedThread.getConnectedDeviceAddr() == null) text_view_status.setText("");
-
+            deviceAddressArray = new ArrayList<>();
             pairedDevices = blead.getBondedDevices();
             if(pairedDevices.size() > 0) {
                 for(BluetoothDevice device: pairedDevices) {
                     String deviceMacAddr = device.getAddress();
                     String deviceName = checkRaspPiAddr(deviceMacAddr);
 
-                    if(checkRaspPiAddr(deviceMacAddr) != null) {
+                    if(deviceName != null) {
                         btArrayAdapter.add(deviceName);
                         deviceAddressArray.add(deviceMacAddr);
                     }
                 }
             }
+            list_view_paired_adapter.setVisibility(View.VISIBLE);
         } else {
             list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
             list_view_paired_adapter.setVisibility(View.GONE);
@@ -314,6 +330,10 @@ public class ConnectionActivity extends AppCompatActivity {
                                 while ((line = br.readLine()) != null) {
                                     text_view_data.setText(text_view_data.getText() + line + "\n");
                                 }
+
+                                // 서버 데이터 크롤링
+                                new DustNetworkTask().execute();
+                                new AirNetworkTask().execute();
 
                                 bw.close();
                                 br.close();
@@ -568,7 +588,7 @@ public class ConnectionActivity extends AppCompatActivity {
     }
 
     private String checkRaspPiAddr(String raspPiAddr) {
-        String sensor = "";
+        String sensor = null;
 
         switch(raspPiAddr){
             case "D8:3A:DD:79:8F:97":
@@ -600,5 +620,99 @@ public class ConnectionActivity extends AppCompatActivity {
         }
 
         return sensor;
+    }
+
+    private class DustNetworkTask extends AsyncTask<Void, Void, Document> {
+
+        @Override
+        protected Document doInBackground(Void... voids) {
+            try {
+                return Jsoup.connect(DUST_SENSOR_URL).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Document document) {
+            if (document != null) {
+                crawlDustData(document);
+            } else {
+                // 요청 실패 처리
+            }
+        }
+    }
+
+    private class AirNetworkTask extends AsyncTask<Void, Void, Document> {
+
+        @Override
+        protected Document doInBackground(Void... voids) {
+            try {
+                return Jsoup.connect(AIR_QUALITY_SENSOR_URL).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Document document) {
+            if (document != null) {
+                crawlAirData(document);
+            } else {
+                // 요청 실패 처리
+            }
+        }
+    }
+
+    private void crawlDustData(Document doc) {
+        Elements head = doc.select("head");
+
+        if (!head.isEmpty()) {
+            text_dust_1 = findViewById(R.id.Text_dust_1);
+            text_dust_2 = findViewById(R.id.Text_dust_2);
+            text_dust_3 = findViewById(R.id.Text_dust_3);
+            text_dust_4 = findViewById(R.id.Text_dust_4);
+
+            Elements scripts = head.select("script[language=JavaScript]");
+
+            // jo2_data 배열의 값을 파싱
+            String[] dataStrings = scripts.first().html().split("\n")[2].split("var jo2_data = ")[1].split(";")[0].replace("[", "").replace("]", "").split(", ");
+
+            text_dust_1.setText(dataStrings[0]);
+            text_dust_2.setText(dataStrings[1]);
+            text_dust_3.setText(dataStrings[2]);
+            text_dust_4.setText(dataStrings[3]);
+
+            Log.d("Tag", "isNull? : " + "Non Null");
+        } else {
+            Log.d("Tag", "isNull? : " + "Null");
+        }
+    }
+
+    private void crawlAirData(Document doc) {
+        Elements head = doc.select("head");
+
+        if (!head.isEmpty()) {
+            text_air_1 = findViewById(R.id.Text_air_1);
+            text_air_2 = findViewById(R.id.Text_air_2);
+            text_air_3 = findViewById(R.id.Text_air_3);
+            text_air_4 = findViewById(R.id.Text_air_4);
+
+            Elements scripts = head.select("script[language=JavaScript]");
+
+            // jo2_data 배열의 값을 파싱
+            String[] dataStrings = scripts.first().html().split("\n")[2].split("var jo2_data = ")[1].split(";")[0].replace("[", "").replace("]", "").split(", ");
+
+            text_air_1.setText(dataStrings[0]);
+            text_air_2.setText(dataStrings[1]);
+            text_air_3.setText(dataStrings[2]);
+            text_air_4.setText(dataStrings[3]);
+
+            Log.d("Tag", "isNull? : " + "Non Null");
+        } else {
+            Log.d("Tag", "isNull? : " + "Null");
+        }
     }
 }

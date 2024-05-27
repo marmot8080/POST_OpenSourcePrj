@@ -58,7 +58,7 @@ public class AdvertisementActivity extends AppCompatActivity {
 
     private ToggleButton toggle_btn_scan;
     private Button btn_delete_all, btn_delete_latest_value, btn_back;
-    private TextView tv_data, text_1jo_data, text_2jo_data, text_3jo_data, text_4jo_data, text_5jo_data;
+    private TextView tv_data, text_dust_1, text_dust_2, text_dust_3, text_dust_4, text_air_1, text_air_2, text_air_3, text_air_4;
     private Switch switch_directly_send;
     private Toast toast;
 
@@ -68,7 +68,8 @@ public class AdvertisementActivity extends AppCompatActivity {
     private static final String mode = "advertising";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
-    private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
+    private static final String DUST_SENSOR_URL = "http://203.255.81.72:10021/dustsensor_v2/sensingpage/"; // dust sensor url
+    private static final String AIR_QUALITY_SENSOR_URL = "http://203.255.81.72:10021/airquality/sensingpage/"; // air quality sensor url
     private static final String FILE_NAME = "/scan_data.csv";
     private static final String[] raspberryPiAddr_1 = {
             "D8:3A:DD:42:AC:7F",
@@ -149,7 +150,8 @@ public class AdvertisementActivity extends AppCompatActivity {
         }
 
         // 서버 데이터 크롤링
-        new NetworkTask().execute();
+        new DustNetworkTask().execute();
+        new AirNetworkTask().execute();
 
         Gson gson = new GsonBuilder().setLenient().create();
         retrofit = new Retrofit.Builder()
@@ -496,7 +498,8 @@ public class AdvertisementActivity extends AppCompatActivity {
                                 throw new RuntimeException(e);
                             }
                             // 서버 데이터 업데이트
-                            new NetworkTask().execute();
+                            new DustNetworkTask().execute();
+                            new AirNetworkTask().execute();
                         } else {
                             toast.setText("NETWORK NOT CONNECTED");
                             toast.show();
@@ -589,7 +592,8 @@ public class AdvertisementActivity extends AppCompatActivity {
                                 throw new RuntimeException(e);
                             }
                             // 서버 데이터 업데이트
-                            new NetworkTask().execute();
+                            new DustNetworkTask().execute();
+                            new AirNetworkTask().execute();
                         } else {
                             toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
                             toggle_btn_scan.setChecked(false);
@@ -755,12 +759,12 @@ public class AdvertisementActivity extends AppCompatActivity {
         return sensorTeam;
     }
 
-    private class NetworkTask extends AsyncTask<Void, Void, Document> {
+    private class DustNetworkTask extends AsyncTask<Void, Void, Document> {
 
         @Override
         protected Document doInBackground(Void... voids) {
             try {
-                return Jsoup.connect(server_URL).get();
+                return Jsoup.connect(DUST_SENSOR_URL).get();
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
@@ -770,40 +774,78 @@ public class AdvertisementActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Document document) {
             if (document != null) {
-                crawlData(document);
+                crawlDustData(document);
             } else {
                 // 요청 실패 처리
             }
         }
     }
 
-    public void crawlData(Document doc) {
-        Elements sensorData = doc.getElementsByTag("tr");
+    private class AirNetworkTask extends AsyncTask<Void, Void, Document> {
 
-        if (!sensorData.isEmpty()) {
-            text_1jo_data = findViewById(R.id.Text_1jo);
-            text_2jo_data = findViewById(R.id.Text_2jo);
-            text_3jo_data = findViewById(R.id.Text_3jo);
-            text_4jo_data = findViewById(R.id.Text_4jo);
-            text_5jo_data = findViewById(R.id.Text_5jo);
-            ArrayList<Integer> serverData = new ArrayList<>();
-
-            for (Element row : sensorData) {
-                Elements rowDatas = row.select("th");
-
-                if (rowDatas.first().text().equals("2조")) {
-                    for (Element data : rowDatas) {
-                        if (data.text().equals("2조")) continue;
-                        serverData.add(Integer.valueOf(data.text()));
-                    }
-                }
+        @Override
+        protected Document doInBackground(Void... voids) {
+            try {
+                return Jsoup.connect(AIR_QUALITY_SENSOR_URL).get();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
             }
+        }
 
-            text_1jo_data.setText(String.valueOf(serverData.get(0)));
-            text_2jo_data.setText(String.valueOf(serverData.get(1)));
-            text_3jo_data.setText(String.valueOf(serverData.get(2)));
-            text_4jo_data.setText(String.valueOf(serverData.get(3)));
-            text_5jo_data.setText(String.valueOf(serverData.get(4)));
+        @Override
+        protected void onPostExecute(Document document) {
+            if (document != null) {
+                crawlAirData(document);
+            } else {
+                // 요청 실패 처리
+            }
+        }
+    }
+
+    private void crawlDustData(Document doc) {
+        Elements head = doc.select("head");
+
+        if (!head.isEmpty()) {
+            text_dust_1 = findViewById(R.id.Text_dust_1);
+            text_dust_2 = findViewById(R.id.Text_dust_2);
+            text_dust_3 = findViewById(R.id.Text_dust_3);
+            text_dust_4 = findViewById(R.id.Text_dust_4);
+
+            Elements scripts = head.select("script[language=JavaScript]");
+
+            // jo2_data 배열의 값을 파싱
+            String[] dataStrings = scripts.first().html().split("\n")[2].split("var jo2_data = ")[1].split(";")[0].replace("[", "").replace("]", "").split(", ");
+
+            text_dust_1.setText(dataStrings[0]);
+            text_dust_2.setText(dataStrings[1]);
+            text_dust_3.setText(dataStrings[2]);
+            text_dust_4.setText(dataStrings[3]);
+
+            Log.d("Tag", "isNull? : " + "Non Null");
+        } else {
+            Log.d("Tag", "isNull? : " + "Null");
+        }
+    }
+
+    private void crawlAirData(Document doc) {
+        Elements head = doc.select("head");
+
+        if (!head.isEmpty()) {
+            text_air_1 = findViewById(R.id.Text_air_1);
+            text_air_2 = findViewById(R.id.Text_air_2);
+            text_air_3 = findViewById(R.id.Text_air_3);
+            text_air_4 = findViewById(R.id.Text_air_4);
+
+            Elements scripts = head.select("script[language=JavaScript]");
+
+            // jo2_data 배열의 값을 파싱
+            String[] dataStrings = scripts.first().html().split("\n")[2].split("var jo2_data = ")[1].split(";")[0].replace("[", "").replace("]", "").split(", ");
+
+            text_air_1.setText(dataStrings[0]);
+            text_air_2.setText(dataStrings[1]);
+            text_air_3.setText(dataStrings[2]);
+            text_air_4.setText(dataStrings[3]);
 
             Log.d("Tag", "isNull? : " + "Non Null");
         } else {
