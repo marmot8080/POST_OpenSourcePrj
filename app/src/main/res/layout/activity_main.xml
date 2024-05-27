@@ -17,45 +17,60 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.25"/>
+        app:layout_constraintVertical_bias="0.25" />
 
-    <Button
-        android:id="@+id/Btn_pair_device"
-        android:layout_width="wrap_content"
-        android:layout_height="56dp"
-        android:text="CONNECTION"
-        android:textSize="18dp"
-        android:textStyle="bold"
+    <LinearLayout
+        android:layout_width="170dp"
+        android:layout_height="360dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5" />
+        app:layout_constraintVertical_bias="0.8"
+        app:layout_constraintHorizontal_bias="0.9">
 
-    <Button
-        android:id="@+id/Btn_scan_advertisement"
-        android:layout_width="wrap_content"
-        android:layout_height="56dp"
-        android:text="ADVERTISEMENT"
-        android:textSize="18dp"
-        android:textStyle="bold"
+
+        <com.example.opensourceprj.SquareButton
+            android:id="@+id/Btn_check_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DATA TABLE"
+            android:textSize="23dp"
+            android:textStyle="bold"
+            android:background="@drawable/button_checkdata" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="170dp"
+        android:layout_height="360dp"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.65" />
+        app:layout_constraintVertical_bias="0.8"
+        app:layout_constraintHorizontal_bias="0.1">
 
-    <Button
-        android:id="@+id/Btn_check_data"
-        android:layout_width="wrap_content"
-        android:layout_height="56dp"
-        android:text="DATA TABLE"
-        android:textSize="18dp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.8" />
+
+        <com.example.opensourceprj.SquareButton
+            android:id="@+id/Btn_pair_device"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CONNECTION"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            android:background="@drawable/button_connection"/>
+
+        <com.example.opensourceprj.SquareButton
+            android:id="@+id/Btn_scan_advertisement"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ADVERTISEMENT"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            android:background="@drawable/button_advertisement"
+            android:layout_marginTop="20dp"/>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
