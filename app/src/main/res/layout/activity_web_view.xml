@@ -21,7 +21,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.02"
-        app:tint="@color/black" />
+        app:tint="@color/image_button_tint" />
 
     <ToggleButton
         android:id="@+id/toggle_Btn_show_data"

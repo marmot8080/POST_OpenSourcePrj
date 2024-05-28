@@ -125,7 +125,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.02"
-        app:tint="@color/black" />
+        app:tint="@color/image_button_tint" />
 
     <ImageButton
         android:layout_width="40dp"
@@ -142,7 +142,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.02"
-        app:tint="@color/black"/>
+        app:tint="@color/image_button_tint"/>
 
     <Switch
         android:id="@+id/Switch_directly_send"
