@@ -30,7 +30,7 @@ git clone https://github.com/marmot8080/POST_OpenSourcePrj.git
 |-------------|----------------------|
 | marmot8080  | marmot8080@gmail.com |
 | Taeho24 | teahotiger@gmail.com           |
-| Bakhyoungwoo | @gmail.com           |
+| Bakhyoungwoo | toplionby421@gmail.com           |
 
 ## 버전 정보
 | 버전   | 주요 기능 및 변경 사항                                               |
