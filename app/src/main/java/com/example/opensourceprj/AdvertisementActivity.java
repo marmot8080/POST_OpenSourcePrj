@@ -128,6 +128,7 @@ public class AdvertisementActivity extends AppCompatActivity {
         toast = Toast.makeText(AdvertisementActivity.this, null, Toast.LENGTH_SHORT);
 
         androidID = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        NetworkManager.setWifiManager(AdvertisementActivity.this);
 
         try { // 애플리케이션 시작 시 파일을 읽어 TextView 설정
             File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
@@ -183,7 +184,7 @@ public class AdvertisementActivity extends AppCompatActivity {
     }
 
     public void onLocation(View v) {
-        String wifiData = NetworkManager.getWifiData(AdvertisementActivity.this);
+        String wifiData = NetworkManager.getWifiData();
 
         if (wifiData != null) {
             comm_data service = retrofit.create(comm_data.class);

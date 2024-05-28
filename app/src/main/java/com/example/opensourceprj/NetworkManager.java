@@ -8,6 +8,8 @@ import android.net.wifi.WifiManager;
 import java.util.List;
 
 public class NetworkManager {
+    private static  WifiManager wifiManager = null;
+
     public static final int WIFI_CONNECTED = 1;     // 와이파이 연결 상태
     public static final int MOBILE_CONNECTED = 2;   // 데이터 연결 상태
     public static final int NOT_CONNECTED = 3; // 미연결 상태
@@ -28,10 +30,12 @@ public class NetworkManager {
         } return NOT_CONNECTED;
     }
 
-    public static String getWifiData(Context context) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    public static void setWifiManager(Context context) {
+        wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+    }
 
-        if(wifiManager.startScan()) {
+    public static String getWifiData() {
+        if(wifiManager != null && wifiManager.startScan()) {
             List<ScanResult> scanResults = wifiManager.getScanResults();
 
             StringBuilder sb = new StringBuilder();

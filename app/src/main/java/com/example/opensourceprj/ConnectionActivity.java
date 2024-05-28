@@ -135,6 +135,7 @@ public class ConnectionActivity extends AppCompatActivity {
         blead = BluetoothAdapter.getDefaultAdapter();
 
         androidID = Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID);
+        NetworkManager.setWifiManager(ConnectionActivity.this);
 
         text_view_status = findViewById(R.id.Text_view_status);
         list_view_paired_adapter = findViewById(R.id.List_view_paired_adapter);
@@ -185,7 +186,7 @@ public class ConnectionActivity extends AppCompatActivity {
     }
 
     public void onLocation(View v) {
-        String wifiData = NetworkManager.getWifiData(ConnectionActivity.this);
+        String wifiData = NetworkManager.getWifiData();
 
         if (wifiData != null) {
             comm_data service = retrofit.create(comm_data.class);
