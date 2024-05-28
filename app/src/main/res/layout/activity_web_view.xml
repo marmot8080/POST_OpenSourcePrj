@@ -40,8 +40,7 @@
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintVertical_bias="0.02"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <WebView
         android:id="@+id/Web_airSen_server_data"
