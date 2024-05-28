@@ -38,7 +38,7 @@
             android:text="DATA TABLE"
             android:textSize="23dp"
             android:textStyle="bold"
-            android:background="@drawable/button_checkdata" />
+            android:background="#C2B4D6" />
     </LinearLayout>
 
     <LinearLayout
@@ -60,7 +60,7 @@
             android:text="CONNECTION"
             android:textSize="20dp"
             android:textStyle="bold"
-            android:background="@drawable/button_connection"/>
+            android:background="#C2B4D6"/>
 
         <com.example.opensourceprj.SquareButton
             android:id="@+id/Btn_scan_advertisement"
@@ -69,7 +69,7 @@
             android:text="ADVERTISEMENT"
             android:textSize="20dp"
             android:textStyle="bold"
-            android:background="@drawable/button_advertisement"
+            android:background="#C2B4D6"
             android:layout_marginTop="20dp"/>
     </LinearLayout>
 

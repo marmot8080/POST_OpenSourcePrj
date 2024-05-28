@@ -15,6 +15,7 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,7 +58,8 @@ public class AdvertisementActivity extends AppCompatActivity {
     private static ArrayList<BLEdata_storage> messageQueue = new ArrayList<>();
 
     private ToggleButton toggle_btn_scan;
-    private Button btn_delete_all, btn_delete_latest_value, btn_back;
+    private Button btn_delete_all, btn_delete_latest_value;
+    private ImageButton btn_back;
     private TextView tv_data, text_dust_1, text_dust_2, text_dust_3, text_dust_4, text_air_1, text_air_2, text_air_3, text_air_4;
     private Switch switch_directly_send;
     private Toast toast;
@@ -204,7 +206,7 @@ public class AdvertisementActivity extends AppCompatActivity {
 
                             @Override
                             public void acceptClicked() {
-                                location = "2-1";
+                                location = "2-4";
                             }
                         });
                         customDialog.show();
@@ -242,7 +244,7 @@ public class AdvertisementActivity extends AppCompatActivity {
 
                 @Override
                 public void acceptClicked() {
-                    location = "2-1";
+                    location = "2-4";
                 }
             });
             customDialog.show();

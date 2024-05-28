@@ -6,35 +6,39 @@
     android:layout_height="match_parent"
     tools:context=".ConnectionActivity">
 
-    <android.widget.Button
+    <ImageButton
         android:id="@+id/Btn_back"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:text="Back"
         android:textSize="18dp"
         android:textStyle="bold"
-        android:background="#87CEEB"
+        android:background="@android:color/transparent"
+        app:srcCompat="@android:drawable/ic_menu_revert"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.02" />
+        app:layout_constraintVertical_bias="0.02"
+        app:tint="@color/black" />
 
-    <android.widget.Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:text="location"
         android:textSize="17dp"
         android:textStyle="bold"
         android:onClick="onLocation"
-        android:background="@drawable/button_checkdata"
+        android:background="@android:color/transparent"
+        app:srcCompat="@android:drawable/ic_dialog_map"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.02" />
+        app:layout_constraintVertical_bias="0.02"
+        app:tint="@color/black"/>
 
     <TextView
         android:id="@+id/Text_view_data"

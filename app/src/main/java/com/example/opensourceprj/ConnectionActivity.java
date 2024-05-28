@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -76,7 +77,8 @@ public class ConnectionActivity extends AppCompatActivity {
     private ArrayList<String> deviceAddressArray;
 
     private TextView text_view_status, text_view_data, text_dust_1, text_dust_2, text_dust_3, text_dust_4, text_air_1, text_air_2, text_air_3, text_air_4;
-    private Button btn_back, btn_delete_all, btn_delete_latest_value;
+    private Button btn_delete_all, btn_delete_latest_value;
+    private ImageButton btn_back;
     private ListView list_view_paired_adapter;
 
     @Override

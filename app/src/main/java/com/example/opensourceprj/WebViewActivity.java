@@ -6,12 +6,13 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class WebViewActivity extends AppCompatActivity {
-    private Button btn_back;
+    private ImageButton btn_back;
     private WebView web_dust_data, web_air_data;
 
     // 서버 url

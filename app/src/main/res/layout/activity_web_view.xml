@@ -6,20 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".WebViewActivity">
 
-    <android.widget.Button
+    <ImageButton
         android:id="@+id/Btn_back"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:text="Back"
         android:textSize="18dp"
         android:textStyle="bold"
-        android:background="#87CEEB"
+        android:background="@android:color/transparent"
+        app:srcCompat="@android:drawable/ic_menu_revert"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.02" />
+        app:layout_constraintVertical_bias="0.02"
+        app:tint="@color/black" />
 
     <ToggleButton
         android:id="@+id/toggle_Btn_show_data"
@@ -32,7 +34,7 @@
         android:textOn="air"
         android:textSize="18dp"
         android:textStyle="bold"
-        android:background="#9ACD32"
+        android:background="#C2B4D6"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.95"
