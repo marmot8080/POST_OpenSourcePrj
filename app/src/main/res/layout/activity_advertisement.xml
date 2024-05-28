@@ -9,18 +9,18 @@
     <TextView
         android:id="@+id/Text_view_data"
         android:layout_width="400dp"
-        android:layout_height="460dp"
-        android:hint="data"
-        android:textSize="12sp"
+        android:layout_height="450dp"
         android:gravity="center"
+        android:hint="data"
         android:maxLines="1000"
         android:scrollbars="vertical"
+        android:textSize="12sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.55" />
+        app:layout_constraintVertical_bias="0.525" />
 
     <ToggleButton
         android:id="@+id/Toggle_btn_scan"
