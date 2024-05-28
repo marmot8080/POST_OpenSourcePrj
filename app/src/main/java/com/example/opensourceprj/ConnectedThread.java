@@ -37,7 +37,6 @@ public class ConnectedThread extends Thread{
 
     private String id;  // 핸드폰 고유 id
     private String location = null;    // 현재 위치
-    private int recentSensingTime = 0;
     private static final String mode = "connection";
     private static final String sensorTeam = "2jo";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
@@ -113,57 +112,50 @@ public class ConnectedThread extends Thread{
                     String sensorData = data[0];
                     String sensingTime = data[1];
                     String OTP = data[2];
-                    String macAddr = data[3];
+                    String macAddr = data[3].substring(0, 17);
 
-                    if(Integer.valueOf(sensingTime) > recentSensingTime) {
-                        recentSensingTime = Integer.valueOf(sensingTime);
+                    BLEdata_storage bleData = new BLEdata_storage(sensorType, sensorTeam, mode, macAddr, sensingTime, OTP, location, sensorData);
+                    datalist.add(bleData);
 
-                        BLEdata_storage bleData = new BLEdata_storage(sensorType, sensorTeam, mode, macAddr, sensingTime, OTP, location, sensorData);
-                        datalist.add(bleData);
+                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+                    BufferedWriter bw = new BufferedWriter(fw);
 
-                        FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-                        BufferedWriter bw = new BufferedWriter(fw);
+                    bw.write(datalist.get(datalist.size() - 1).get_sensor_type());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_sensor_team());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_mode());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_mac_addr());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_otp());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_key());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_sensor_data());
+                    bw.write("," + datalist.get(datalist.size() - 1).get_time());
 
-                        bw.write(datalist.get(datalist.size() - 1).get_sensor_type());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_sensor_team());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_mode());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_mac_addr());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_otp());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_key());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_sensor_data());
-                        bw.write("," + datalist.get(datalist.size() - 1).get_time());
+                    bw.newLine();
 
-                        bw.newLine();
+                    bw.close();
+                    fw.close();
 
-                        bw.close();
-                        fw.close();
+                    FileReader fr = new FileReader(file.getAbsoluteFile());
+                    BufferedReader br = new BufferedReader(fr);
 
-                        FileReader fr = new FileReader(file.getAbsoluteFile());
-                        BufferedReader br = new BufferedReader(fr);
+                    String line = datalist.get(datalist.size() - 1).get_sensor_type() +
+                            "," + datalist.get(datalist.size() - 1).get_sensor_team() +
+                            "," + datalist.get(datalist.size() - 1).get_mode() +
+                            "," + datalist.get(datalist.size() - 1).get_mac_addr() +
+                            "," + datalist.get(datalist.size() - 1).get_otp() +
+                            "," + datalist.get(datalist.size() - 1).get_key() +
+                            "," + datalist.get(datalist.size() - 1).get_sensor_data() +
+                            "," + datalist.get(datalist.size() - 1).get_time();
+                    text_view_data.append(line + "\n");
 
-                        String line = datalist.get(datalist.size() - 1).get_sensor_type() +
-                                "," + datalist.get(datalist.size() - 1).get_sensor_team() +
-                                "," + datalist.get(datalist.size() - 1).get_mode() +
-                                "," + datalist.get(datalist.size() - 1).get_mac_addr() +
-                                "," + datalist.get(datalist.size() - 1).get_otp() +
-                                "," + datalist.get(datalist.size() - 1).get_key() +
-                                "," + datalist.get(datalist.size() - 1).get_sensor_data() +
-                                "," + datalist.get(datalist.size() - 1).get_time();
-                        text_view_data.append(line + "\n");
+                    br.close();
+                    fr.close();
 
-                        br.close();
-                        fr.close();
-
-                        count++;
-                        Thread.sleep(500);
-                    }
+                    count++;
                 }
             }
             cancel();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
         }
     }
 
