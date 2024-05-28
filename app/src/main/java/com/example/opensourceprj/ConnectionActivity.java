@@ -199,18 +199,6 @@ public class ConnectionActivity extends AppCompatActivity {
                     String result = response.body().toString();
                     if(result.equals("Localization Error")) {
                         customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 읽어오지 못했습니다.", "취소", "확인");
-                        customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-
-                            @Override
-                            public void cancelClicked() {
-                                location = null;
-                            }
-
-                            @Override
-                            public void acceptClicked() {
-                                location = null;
-                            }
-                        });
                         customDialog.show();
                     } else {
                         customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 " + result + "로 저장하시겠습니까?", "아니오", "예");
@@ -218,7 +206,7 @@ public class ConnectionActivity extends AppCompatActivity {
 
                             @Override
                             public void cancelClicked() {
-                                location = null;
+
                             }
 
                             @Override
@@ -232,23 +220,11 @@ public class ConnectionActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<String> call, Throwable t) {
-                    location = null;
+
                 }
             });
         } else {
-            customDialog = new CustomDialog(ConnectionActivity.this, "현재 위치를 읽어오지 못했습니다.", "취소", "확인");
-            customDialog.setDialogListener(new CustomDialog.CustomDialogInterface() {
-
-                @Override
-                public void cancelClicked() {
-                    location = null;
-                }
-
-                @Override
-                public void acceptClicked() {
-                    location = null;
-                }
-            });
+            customDialog = new CustomDialog(ConnectionActivity.this, "Wifi data를 읽어오지 못했습니다.", "취소", "확인");
             customDialog.show();
         }
     }
