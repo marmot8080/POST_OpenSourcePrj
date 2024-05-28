@@ -1,26 +1,28 @@
 package com.example.opensourceprj;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class ServerCrawlingActivity extends AppCompatActivity {
-    private Button btn_back;
-    private WebView web_data;
+public class WebViewActivity extends AppCompatActivity {
+    private ImageButton btn_back;
+    private WebView web_dust_data, web_air_data;
 
-    private static final String server_URL = "http://203.255.81.72:10021/dustsensor/sensingpage/"; // 서버 url
+    // 서버 url
+    private static final String server_dust_URL = "http://203.255.81.72:10021/dustsensor_v2/sensingpage/";
+    private static final String server_air_URL = "http://203.255.81.72:10021/airquality/sensingpage/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_server_crawling);
+        setContentView(R.layout.activity_web_view);
 
         btn_back = findViewById(R.id.Btn_back);
         btn_back.setOnClickListener(new View.OnClickListener() {
@@ -30,12 +32,30 @@ public class ServerCrawlingActivity extends AppCompatActivity {
             }
         });
 
-        web_data = findViewById(R.id.Web_server_data);
+        web_air_data = findViewById(R.id.Web_airSen_server_data);
+        web_dust_data = findViewById(R.id.Web_dustSen_server_data);
 
-        setWebViewPermissions(web_data);
+
+        setWebViewPermissions(web_air_data);
+        setWebViewPermissions(web_dust_data);
 
         // 웹페이지 호출
-        web_data.loadUrl(server_URL);
+        web_air_data.loadUrl(server_air_URL);
+        web_dust_data.loadUrl(server_dust_URL);
+    }
+
+    public void onToggleChange(View v) {
+        boolean on = ((ToggleButton) v).isChecked();
+        web_dust_data = findViewById(R.id.Web_dustSen_server_data);
+        web_air_data = findViewById(R.id.Web_airSen_server_data);
+
+        if (on) {
+            web_dust_data.setVisibility(View.GONE);
+            web_air_data.setVisibility(View.VISIBLE);
+        } else {
+            web_dust_data.setVisibility(View.VISIBLE);
+            web_air_data.setVisibility(View.GONE);
+        }
     }
 
     public void setWebViewPermissions(WebView webView) {

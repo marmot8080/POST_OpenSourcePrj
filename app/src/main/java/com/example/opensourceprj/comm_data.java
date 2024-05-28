@@ -10,26 +10,34 @@ import retrofit2.http.Query;
 
 public interface comm_data {
     @FormUrlEncoded
-    @POST("dustsensor/sensing/")
-    Call<String> post(
+    @POST("dustsensor_v2/sensing/")
+    Call<String> dust_sensing(
             @Field("sensor") String user,
+            @Field("mode") String mode,
             @Field("mac") String mac,
             @Field("receiver") String receiver,
-            @Field("time") long time,
-            @Field("otp") int otp,
-            @Field("data") String data);
-
-    @POST("dustsensor/commtest_json/")
-    Call<postdata> post_json(
-            @Body postdata pd
+            @Field("time") String time,
+            @Field("otp") String otp,
+            @Field("key") String key,
+            @Field("data") String data
     );
 
-    @GET("dustsensor/commtest_get/")
-    Call<String> get(
-            @Query("sensor") String user,
-            @Query("mac") String mac,
-            @Query("receiver") String receiver,
-            @Query("time") long time,
-            @Query("otp") int otp,
-            @Query("data") String data);
+    @FormUrlEncoded
+    @POST("airquality/sensing/")
+    Call<String> air_sensing(
+            @Field("sensor") String user,
+            @Field("mode") String mode,
+            @Field("mac") String mac,
+            @Field("receiver") String receiver,
+            @Field("time") String time,
+            @Field("otp") String otp,
+            @Field("key") String key,
+            @Field("data") String data
+    );
+
+    @FormUrlEncoded
+    @POST("localization/locationcheck/")
+    Call<String> location(
+            @Field("wifidata") String data
+    );
 }
