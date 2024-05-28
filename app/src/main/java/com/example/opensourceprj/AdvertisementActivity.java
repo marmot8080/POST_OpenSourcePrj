@@ -576,9 +576,10 @@ public class AdvertisementActivity extends AppCompatActivity {
                                 tv_data = findViewById(R.id.Text_view_data);
                                 if (messageQueue.size() > 9) messageQueue.remove(0);
 
-                                String message = null;
-                                for (int i = 0; i < 10; i++) {
-                                    message = messageQueue.get(i).get_sensor_type()
+                                String message = "";
+                                for (int i = 0; i < messageQueue.size(); i++) {
+                                    message = message
+                                            + messageQueue.get(i).get_sensor_type()
                                             + ", " + messageQueue.get(i).get_sensor_team()
                                             + ", " + messageQueue.get(i).get_mode()
                                             + ", " + messageQueue.get(i).get_mac_addr()
