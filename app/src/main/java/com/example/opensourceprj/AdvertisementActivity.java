@@ -542,59 +542,44 @@ public class AdvertisementActivity extends AppCompatActivity {
 
                     if (switch_directly_send.isChecked() == true) {
                         if (NetworkManager.getConnectivityStatus(AdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
-                            try {
-                                File file = new File(Environment.getExternalStorageDirectory().getAbsoluteFile() + FILE_NAME);
-                                if (!file.exists()) {
-                                    file.createNewFile();
+                            Call<String> call;
+                            if (sensorType == TYPE_DUST_SENSOR)
+                                call = service.dust_sensing(sensorTeam, mode, MacAddr, androidID, sensingTime, OTP, location, sensorData);
+                            else
+                                call = service.air_sensing(sensorTeam, mode, MacAddr, androidID, sensingTime, OTP, location, sensorData);
+
+                            call.enqueue(new Callback<String>() {
+                                @Override
+                                public void onResponse(Call<String> call, Response<String> response) {
+                                    Log.d("ServerCommunicationSuccess", response.body().toString());
                                 }
-                                FileReader fr = new FileReader(file.getAbsoluteFile());
-                                BufferedReader br = new BufferedReader(fr);
 
-                                Call<String> call;
-                                if (sensorType == TYPE_DUST_SENSOR)
-                                    call = service.dust_sensing(sensorTeam, mode, MacAddr, androidID, sensingTime, OTP, location, sensorData);
-                                else
-                                    call = service.air_sensing(sensorTeam, mode, MacAddr, androidID, sensingTime, OTP, location, sensorData);
-
-                                call.enqueue(new Callback<String>() {
-                                    @Override
-                                    public void onResponse(Call<String> call, Response<String> response) {
-                                        Log.d("ServerCommunicationSuccess", response.body().toString());
-                                    }
-
-                                    @Override
-                                    public void onFailure(Call<String> call, Throwable t) {
-                                        Log.d("ServerCommunicationFail", "failed to communicate with server", t);
-                                    }
-                                });
-                                br.close();
-                                fr.close();
-
-                                BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, mode, MacAddr, sensingTime, OTP, location, sensorData);
-                                messageQueue.add(data);
-
-                                tv_data = findViewById(R.id.Text_view_data);
-                                if (messageQueue.size() > 9) messageQueue.remove(0);
-
-                                String message = "";
-                                for (int i = 0; i < messageQueue.size(); i++) {
-                                    message = message
-                                            + messageQueue.get(i).get_sensor_type()
-                                            + ", " + messageQueue.get(i).get_sensor_team()
-                                            + ", " + messageQueue.get(i).get_mode()
-                                            + ", " + messageQueue.get(i).get_mac_addr()
-                                            + ", " + messageQueue.get(i).get_time()
-                                            + ", " + messageQueue.get(i).get_otp()
-                                            + ", " + messageQueue.get(i).get_key()
-                                            + ", " + messageQueue.get(i).get_sensor_data()
-                                            + "\n";
+                                @Override
+                                public void onFailure(Call<String> call, Throwable t) {
+                                    Log.d("ServerCommunicationFail", "failed to communicate with server", t);
                                 }
-                                tv_data.setText(message);
-                            } catch (FileNotFoundException e) {
-                                throw new RuntimeException(e);
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
+                            });
+
+                            BLEdata_storage data = new BLEdata_storage(sensorType, sensorTeam, mode, MacAddr, sensingTime, OTP, location, sensorData);
+                            messageQueue.add(data);
+
+                            tv_data = findViewById(R.id.Text_view_data);
+                            if (messageQueue.size() > 9) messageQueue.remove(0);
+
+                            String message = "";
+                            for (int i = 0; i < messageQueue.size(); i++) {
+                                message = message
+                                        + messageQueue.get(i).get_sensor_type()
+                                        + ", " + messageQueue.get(i).get_sensor_team()
+                                        + ", " + messageQueue.get(i).get_mode()
+                                        + ", " + messageQueue.get(i).get_mac_addr()
+                                        + ", " + messageQueue.get(i).get_time()
+                                        + ", " + messageQueue.get(i).get_otp()
+                                        + ", " + messageQueue.get(i).get_key()
+                                        + ", " + messageQueue.get(i).get_sensor_data()
+                                        + "\n";
                             }
+                            tv_data.setText(message);
                             // 서버 데이터 업데이트
                             new DustNetworkTask().execute();
                             new AirNetworkTask().execute();
