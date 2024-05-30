@@ -66,7 +66,8 @@ public class AdvertisementActivity extends AppCompatActivity {
 
     private String androidID;  // 핸드폰 고유 id
     private String location = null; // 현재 위치
-    private int recentSensingTime = 0;
+    private int recentDustTime = 0;
+    private int recentAirTime = 0;
     private static final String mode = "advertising";
     private static final String TYPE_DUST_SENSOR = "dustsensor";
     private static final String TYPE_AIR_SENSOR = "airquality";
@@ -524,22 +525,28 @@ public class AdvertisementActivity extends AppCompatActivity {
             String MacAddr = device.getAddress();
             String sensorTeam = checkRaspPiAddr(MacAddr);
 
-            if (sensorTeam != null) {
+            if (sensorTeam != null && sensorTeam.equals("2jo")) {
                 String sensorType = getSensorType(scanRecord);
-
                 String hexData = byteArrayToHex(scanRecord);
                 String sensingTime = String.valueOf(extractSensingTime(hexData));
                 String OTP = extractOTP(hexData);
                 String sensorData;
-                if (sensorType.equals(TYPE_DUST_SENSOR))
-                    sensorData = extractDustSensorData(hexData);
-                else sensorData = extractAirSensorData(hexData);
+                int recentSensingTime = 0;
 
-                if (sensorType != null && Integer.valueOf(sensingTime) > recentSensingTime && location != null) {
-                    recentSensingTime = Integer.valueOf(sensingTime);
+                if (sensorType.equals(TYPE_DUST_SENSOR)) {
+                    sensorData = extractDustSensorData(hexData);
+                    recentSensingTime = recentDustTime;
+                }
+                else {
+                    sensorData = extractAirSensorData(hexData);
+                    recentSensingTime = recentAirTime;
+                }
+
+                if (sensorType != null && location != null && Integer.valueOf(sensingTime) > recentSensingTime) {
+                    if (sensorType.equals(TYPE_DUST_SENSOR)) recentDustTime = Integer.valueOf(sensingTime);
+                    else recentAirTime = Integer.valueOf(sensingTime);
 
                     switch_directly_send = findViewById(R.id.Switch_directly_send);
-
                     if (switch_directly_send.isChecked() == true) {
                         if (NetworkManager.getConnectivityStatus(AdvertisementActivity.this) != NetworkManager.NOT_CONNECTED) {
                             Call<String> call;
@@ -583,6 +590,12 @@ public class AdvertisementActivity extends AppCompatActivity {
                             // 서버 데이터 업데이트
                             new DustNetworkTask().execute();
                             new AirNetworkTask().execute();
+
+                            try {
+                                Thread.sleep(500);
+                            } catch (InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
                         } else {
                             toggle_btn_scan = findViewById(R.id.Toggle_btn_scan);
                             toggle_btn_scan.setChecked(false);
@@ -630,12 +643,6 @@ public class AdvertisementActivity extends AppCompatActivity {
                                 "," + datalist.get(datalist.size() - 1).get_sensor_data() +
                                 "," + datalist.get(datalist.size() - 1).get_time();
                         tv_data.append(line + "\n");
-                    }
-
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
                     }
                 }
             }
