@@ -90,6 +90,22 @@ public class AdvertisementActivity extends AppCompatActivity {
             "D8:3A:DD:C1:89:79",
             "D8:3A:DD:C1:89:C7"
     }; // 2조 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_2_1 = {
+            "D8:3A:DD:79:8F:97",
+            "D8:3A:DD:C1:89:70"
+    }; // 2조 1번 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_2_2 = {
+            "D8:3A:DD:79:8F:B9",
+            "D8:3A:DD:C1:88:FE"
+    }; // 2조 2번 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_2_3 = {
+            "D8:3A:DD:79:8F:54",
+            "D8:3A:DD:C1:89:79"
+    }; // 2조 3번 라즈베리파이 Mac address
+    private static final String[] raspberryPiAddr_2_4 = {
+            "D8:3A:DD:79:8F:80",
+            "D8:3A:DD:C1:89:C7"
+    }; // 2조 4번 라즈베리파이 Mac address
     private static final String[] raspberryPiAddr_3 = {
             "D8:3A:DD:79:8E:D9",
             "D8:3A:DD:42:AC:9A",
@@ -114,6 +130,10 @@ public class AdvertisementActivity extends AppCompatActivity {
     }; // ta 라즈베리파이 Mac address
     private static final List<String> raspberryPiAddrList_1 = new ArrayList<>(Arrays.asList(raspberryPiAddr_1));
     private static final List<String> raspberryPiAddrList_2 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2));
+    private static final List<String> raspberryPiAddrList_2_1 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2_1));
+    private static final List<String> raspberryPiAddrList_2_2 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2_2));
+    private static final List<String> raspberryPiAddrList_2_3 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2_3));
+    private static final List<String> raspberryPiAddrList_2_4 = new ArrayList<>(Arrays.asList(raspberryPiAddr_2_4));
     private static final List<String> raspberryPiAddrList_3 = new ArrayList<>(Arrays.asList(raspberryPiAddr_3));
     private static final List<String> raspberryPiAddrList_4 = new ArrayList<>(Arrays.asList(raspberryPiAddr_4));
     private static final List<String> raspberryPiAddrList_5 = new ArrayList<>(Arrays.asList(raspberryPiAddr_5));
@@ -524,8 +544,16 @@ public class AdvertisementActivity extends AppCompatActivity {
         public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
             String MacAddr = device.getAddress();
             String sensorTeam = checkRaspPiAddr(MacAddr);
+            boolean flag = false;
 
-            if (sensorTeam != null && sensorTeam.equals("2jo")) {
+            if(sensorTeam != null && sensorTeam.equals("2jo")){
+                if(location.contains("2-1") && raspberryPiAddrList_2_1.contains(MacAddr)) flag = true;
+                else if(location.contains("2-2") && raspberryPiAddrList_2_2.contains(MacAddr)) flag = true;
+                else if(location.contains("2-3") && raspberryPiAddrList_2_3.contains(MacAddr)) flag = true;
+                else if(!location.contains("2-3") && raspberryPiAddrList_2_4.contains(MacAddr)) flag = true;
+            }
+
+            if (flag) {
                 String sensorType = getSensorType(scanRecord);
                 String hexData = byteArrayToHex(scanRecord);
                 String sensingTime = String.valueOf(extractSensingTime(hexData));
@@ -735,6 +763,7 @@ public class AdvertisementActivity extends AppCompatActivity {
 
         if (matcher.find()) {
             sb.append(Integer.parseInt(matcher.group(1), 16));
+            if(Integer.parseInt(matcher.group(2), 16) < 10) sb.append('0');
             sb.append(Integer.parseInt(matcher.group(2), 16));
             sensorData = sb.toString(); // 매칭된 문자열을 추출하여 반환
         }
